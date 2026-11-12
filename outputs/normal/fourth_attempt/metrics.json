@@ -1,0 +1,18 @@
+{
+  "recording": "normal/fourth_attempt",
+  "condition": "normal",
+  "recording_s": 29.1,
+  "ecg_fs_hz": 500,
+  "optical_fs_hz": 50,
+  "ecg_samples": 14550,
+  "optical_samples": 1455,
+  "ecg_beat_candidates": 50,
+  "optical_peak_candidates": 0,
+  "ecg_ppg_candidate_matches": 0,
+  "optical_channel_present": false,
+  "heart_rate_bpm": 105.89,
+  "sdnn_ms": 21.8,
+  "rmssd_ms": 19.1,
+  "pnn50_pct": 2.2,
+  "masked_pct": 0.0
+}

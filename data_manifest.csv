@@ -1,0 +1,13 @@
+file,person,condition,kss,notes
+normal/first_attempt.csv,B,normal,,long recording; optical working
+normal/second_attempt.csv,B,normal,,same recording as earlier dataset user1
+normal/third_attempt.csv,A,normal,,healthy baseline
+normal/fourth_attempt.csv,A,normal,,healthy baseline
+normal/fifth_attempt.csv,A,normal,,healthy baseline
+fatigue/first_attempt.csv,A,fatigue,,sick and tired
+fatigue/second_attempt.csv,A,fatigue,,sick and tired
+fatigue/third_attempt.csv,A,fatigue,,sick and tired
+fatigue/fourth_attempt.csv,A,fatigue,,sick and tired
+fatigue/fifth_attempt.csv,A,fatigue,,sick and tired
+data/contributed/Nhat/20261111_220716_normal.csv,Nhat,normal,,contributed via app; source normal/fifth_attempt.csv; baseline
+data/contributed/Huy/20261111_220921_normal.csv,Huy,normal,,contributed via app; source normal/first_attempt.csv; baseline

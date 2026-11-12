@@ -1,0 +1,18 @@
+{
+  "recording": "fatigue/third_attempt",
+  "condition": "fatigue",
+  "recording_s": 37.66,
+  "ecg_fs_hz": 500,
+  "optical_fs_hz": 50,
+  "ecg_samples": 18830,
+  "optical_samples": 1883,
+  "ecg_beat_candidates": 65,
+  "optical_peak_candidates": 0,
+  "ecg_ppg_candidate_matches": 0,
+  "optical_channel_present": false,
+  "heart_rate_bpm": 107.5,
+  "sdnn_ms": 18.7,
+  "rmssd_ms": 8.9,
+  "pnn50_pct": 0.0,
+  "masked_pct": 0.0
+}

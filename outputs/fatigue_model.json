@@ -1,0 +1,51 @@
+{
+  "type": "standardized_logistic_regression",
+  "features": [
+    "hr_mean",
+    "sdnn",
+    "rmssd",
+    "pnn50"
+  ],
+  "mean": [
+    77.98182935904606,
+    32.227824087263414,
+    28.65861694145117,
+    12.424091584549156
+  ],
+  "scale": [
+    17.62813885536635,
+    12.680018189589285,
+    12.914235150908038,
+    11.042322109165713
+  ],
+  "coef": [
+    0.079752022623803,
+    0.5526581666401269,
+    -1.8583645796733628,
+    -0.6642085732942333
+  ],
+  "intercept": -0.803859233047969,
+  "threshold": 0.5,
+  "window_s": 20,
+  "hop_s": 5,
+  "trained_on": [
+    "fatigue/fifth_attempt",
+    "fatigue/first_attempt",
+    "fatigue/fourth_attempt",
+    "fatigue/second_attempt",
+    "fatigue/third_attempt",
+    "normal/fifth_attempt",
+    "normal/first_attempt",
+    "normal/fourth_attempt",
+    "normal/second_attempt",
+    "normal/third_attempt"
+  ],
+  "loro_recording_accuracy": {
+    "A: all 10 recordings | HR only": 0.7,
+    "A: all 10 recordings | HRV only (sdnn, rmssd, pnn50)": 0.6,
+    "A: all 10 recordings | all 4 features": 0.6,
+    "B: matched (normal 3-5 vs fatigue) | HR only": 0.375,
+    "B: matched (normal 3-5 vs fatigue) | HRV only (sdnn, rmssd, pnn50)": 0.5,
+    "B: matched (normal 3-5 vs fatigue) | all 4 features": 0.5
+  }
+}
