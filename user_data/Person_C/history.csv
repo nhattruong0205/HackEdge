@@ -1,0 +1,2 @@
+time,recording,result,p_fatigue,hr,rmssd,beat_match
+2026-11-18T16:55:30,fatigue/personC_mild_fatigue.csv,FATIGUE,0.784,85.9,11.4,0.998

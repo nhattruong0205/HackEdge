@@ -1,23 +1,25 @@
-"""BreathBreak — personal-baseline fatigue check (web app).
+"""BreathBreak — personal-baseline & zero-baseline physiological fatigue check (web app).
 
-Run:  python3 -m streamlit run app.py
+Run:  python -m streamlit run app.py
   ① Record baseline  : upload a rested recording once per person -> saved as their baseline
-  ② Check for fatigue: upload a new recording -> compared with the baseline -> FATIGUE / NORMAL
+  ② Check for fatigue: compare a new recording with their saved baseline OR run a Zero-Baseline Quick Check on a new person
   History            : past checks per person
-  Model & retraining : how the model was trained, honest held-out results, retrain button
+  HR reports         : serious-fatigue alerts logged for HR
+  Model & retraining : how both models (Personal-Baseline Delta & Zero-Baseline Single-Recording) work and retrain button
 """
 import json
-import shutil
 from datetime import datetime
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from fatigue_pipeline import (FEATURES, FS_ECG, LABELS, MODEL_PATH, PRE, ROOT, DeltaModel, analyze,
-                              beat_similarity, load_recording, quality_warnings)
+from fatigue_pipeline import (
+    FEATURES, FS_ECG, LABELS, MODEL_PATH, PRE, ROOT, SINGLE_FEATURES,
+    DeltaModel, analyze, beat_similarity, ensure_full_features,
+    load_recording, quality_warnings,
+)
 from hr_report import SEVERITY_BANDS, build_report, load_reports, report_text, send_report
 
 USERS = ROOT / 'user_data'
@@ -27,7 +29,7 @@ st.set_page_config(page_title='BreathBreak — Fatigue Check', page_icon='🫀',
 
 
 # ---------------- helpers ----------------
-@st.cache_data(show_spinner='Preprocessing ECG (filter → artifact mask → R-peaks → features)…')
+@st.cache_data(show_spinner='Preprocessing ECG & PPG (filter → artifact mask → R-peaks → HRV & PPG features)…')
 def run_analysis(data: bytes):
     ecg, opt = load_recording(data)
     return analyze(ecg, opt)
@@ -46,14 +48,33 @@ def users():
 
 
 def load_baseline(uid):
-    return json.loads((USERS / uid / 'baseline.json').read_text())
+    b = json.loads((USERS / uid / 'baseline.json').read_text())
+    b['features'] = ensure_full_features(b['features'], uid=uid)
+    return b
+
+
+def load_baseline_analysis(uid=None, base=None):
+    """Load full analyzed ECG + PPG signals for the user's saved baseline (or a default rested reference in Zero-Baseline mode)."""
+    if uid and (USERS / uid / 'baseline.csv').exists():
+        return run_analysis((USERS / uid / 'baseline.csv').read_bytes()), f"{uid}'s original baseline ({base['source'] if base else 'baseline.csv'})"
+    if base and base.get('source'):
+        for cand in (ROOT / 'data' / base['source'], ROOT / base['source']):
+            if cand.exists():
+                return run_analysis(cand.read_bytes()), f"{uid}'s original baseline ({base['source']})"
+    for ref_rel in ('normal/personC_rested_baseline.csv', 'normal/sixth_attempt.csv', 'normal/first_attempt.csv'):
+        for cand in (ROOT / 'data' / ref_rel, ROOT / ref_rel):
+            if cand.exists():
+                return run_analysis(cand.read_bytes()), f"Healthy rested reference ({ref_rel})"
+    return None, None
 
 
 def samples():
     out = {}
     for folder in ('normal', 'fatigue'):
-        for p in sorted((ROOT / folder).glob('*.csv')):
-            out[f'{folder}/{p.name}'] = p
+        for base_dir in (ROOT / 'data' / folder, ROOT / folder):
+            if base_dir.exists():
+                for p in sorted(base_dir.glob('*.csv')):
+                    out.setdefault(f'{folder}/{p.name}', p)
     return out
 
 
@@ -85,6 +106,118 @@ def ecg_figure(res, title, seconds=10):
     return fig
 
 
+def ppg_figure(res, title='Optical (PPG) pulse wave — first 10 s of stable part', seconds=10):
+    opt = res.get('optical', {})
+    if not opt.get('present'):
+        return None
+    t_o, x_o, pk = opt['t_opt'], opt['ppg_clean'], opt['ppg_peaks']
+    a = res['keep'][0]; w = (t_o >= a) & (t_o <= a + seconds)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=t_o[w], y=x_o[w], line=dict(width=1.2, color='#e67e22'), name='clean PPG'))
+    p = pk[(t_o[pk] >= a) & (t_o[pk] <= a + seconds)]
+    fig.add_trace(go.Scatter(x=t_o[p], y=x_o[p], mode='markers', marker=dict(color='#2c3e50', size=7), name='PPG peak'))
+    pat_str = f" · median ECG→PPG PAT = {opt['features']['PAT_ms']:.0f} ms" if opt['features'].get('PAT_ms') else ''
+    fig.update_layout(height=210, title=title + pat_str, margin=dict(l=10, r=10, t=35, b=10),
+                      xaxis_title='time (s)', yaxis_title='PPG (mV)', showlegend=False)
+    return fig
+
+
+def ecg_comparison_figure(base_res, new_res, base_label, new_col='#c9302c', seconds=10):
+    """Overlay original/baseline ECG and new check ECG over the first 10 s of each recording's stable part."""
+    fig = go.Figure()
+    if base_res is not None:
+        tb, xb, rpb = base_res['t'], base_res['ecg_clean'], base_res['rpeaks']
+        ab = base_res['keep'][0]; wb = (tb >= ab) & (tb <= ab + seconds)
+        rb = rpb[(tb[rpb] >= ab) & (tb[rpb] <= ab + seconds)]
+        fig.add_trace(go.Scatter(
+            x=tb[wb] - ab, y=xb[wb],
+            line=dict(width=1.3, color='#2e8b57', dash='solid'),
+            opacity=0.75,
+            name=f"Original / Baseline ECG ({base_res['features']['HR']:.0f} bpm, {len(rb)} beats in 10s)",
+        ))
+        fig.add_trace(go.Scatter(
+            x=tb[rb] - ab, y=xb[rb],
+            mode='markers', marker=dict(color='#2e8b57', symbol='circle-open', size=9, line=dict(width=2)),
+            name='Original R-peaks',
+        ))
+    tn, xn, rpn = new_res['t'], new_res['ecg_clean'], new_res['rpeaks']
+    an = new_res['keep'][0]; wn = (tn >= an) & (tn <= an + seconds)
+    rn = rpn[(tn[rpn] >= an) & (tn[rpn] <= an + seconds)]
+    fig.add_trace(go.Scatter(
+        x=tn[wn] - an, y=xn[wn],
+        line=dict(width=1.4, color=new_col),
+        name=f"New Recording ECG ({new_res['features']['HR']:.0f} bpm, {len(rn)} beats in 10s)",
+    ))
+    fig.add_trace(go.Scatter(
+        x=tn[rn] - an, y=xn[rn],
+        mode='markers', marker=dict(color='orange', size=8),
+        name='New R-peaks',
+    ))
+    fig.update_layout(
+        height=270,
+        title=f"ECG Signal Comparison — First {seconds} s of Stable Part (Original Baseline vs. New Recording)",
+        margin=dict(l=10, r=10, t=38, b=10),
+        xaxis_title='seconds into stable part (0–10 s aligned)',
+        yaxis_title='ECG (mV)',
+        legend=dict(orientation='h', yanchor='bottom', y=1.01, xanchor='right', x=1),
+    )
+    return fig
+
+
+def ppg_comparison_figure(base_res, new_res, new_col='#e67e22', seconds=10):
+    """Overlay original/baseline Optical PPG and new check Optical PPG over the first 10 s of the stable part."""
+    b_opt = (base_res or {}).get('optical', {})
+    n_opt = new_res.get('optical', {})
+    if not b_opt.get('present') and not n_opt.get('present'):
+        return None
+    fig = go.Figure()
+    title_parts = []
+    if b_opt.get('present'):
+        t_b, x_b, pk_b = b_opt['t_opt'], b_opt['ppg_clean'], b_opt['ppg_peaks']
+        ab = base_res['keep'][0]; wb = (t_b >= ab) & (t_b <= ab + seconds)
+        pb = pk_b[(t_b[pk_b] >= ab) & (t_b[pk_b] <= ab + seconds)]
+        pat_b = f", PAT {b_opt['features']['PAT_ms']:.0f} ms" if b_opt['features'].get('PAT_ms') else ''
+        fig.add_trace(go.Scatter(
+            x=t_b[wb] - ab, y=x_b[wb],
+            line=dict(width=1.6, color='#2e8b57', dash='dot'),
+            name=f"Original / Baseline PPG ({len(pb)} pulses{pat_b})",
+        ))
+        fig.add_trace(go.Scatter(
+            x=t_b[pb] - ab, y=x_b[pb],
+            mode='markers', marker=dict(color='#2e8b57', symbol='circle-open', size=8, line=dict(width=2)),
+            name='Original PPG peaks',
+        ))
+        if b_opt['features'].get('PAT_ms'):
+            title_parts.append(f"Original PAT = {b_opt['features']['PAT_ms']:.0f} ms")
+    if n_opt.get('present'):
+        t_n, x_n, pk_n = n_opt['t_opt'], n_opt['ppg_clean'], n_opt['ppg_peaks']
+        an = new_res['keep'][0]; wn = (t_n >= an) & (t_n <= an + seconds)
+        pn = pk_n[(t_n[pk_n] >= an) & (t_n[pk_n] <= an + seconds)]
+        pat_n = f", PAT {n_opt['features']['PAT_ms']:.0f} ms" if n_opt['features'].get('PAT_ms') else ''
+        fig.add_trace(go.Scatter(
+            x=t_n[wn] - an, y=x_n[wn],
+            line=dict(width=1.8, color=new_col),
+            name=f"New Recording PPG ({len(pn)} pulses{pat_n})",
+        ))
+        fig.add_trace(go.Scatter(
+            x=t_n[pn] - an, y=x_n[pn],
+            mode='markers', marker=dict(color='#2c3e50', size=7),
+            name='New PPG peaks',
+        ))
+        if n_opt['features'].get('PAT_ms'):
+            title_parts.append(f"New PAT = {n_opt['features']['PAT_ms']:.0f} ms")
+    pat_summary = f" · ({' → '.join(title_parts)})" if title_parts else ''
+    fig.update_layout(
+        height=250,
+        title=f"Optical (PPG) Signal Comparison — First {seconds} s of Stable Part{pat_summary}",
+        margin=dict(l=10, r=10, t=38, b=10),
+        xaxis_title='seconds into stable part (0–10 s aligned)',
+        yaxis_title='PPG (mV)',
+        legend=dict(orientation='h', yanchor='bottom', y=1.01, xanchor='right', x=1),
+    )
+    return fig
+
+
 def overview_figure(res, title):
     t, x = res['t'], res['ecg_clean']
     step = 5
@@ -98,15 +231,20 @@ def overview_figure(res, title):
 
 def quality_table(res):
     q, f = res['quality'], res['features'] or {}
-    return pd.DataFrame([
+    rows = [
         ('Recording length', f"{q['duration_s']:.1f} s"),
         ('Stable part used', f"{q['stable_start']:.0f}–{q['stable_end']:.0f} s ({q['stable_s']:.0f} s)"),
         ('Clean beats', str(q['clean_beats'])),
         ('Masked (motion / saturation)', f"{q['masked_pct']:.1f} %"),
-        ('Optical (PPG) channel', 'working' if q['optical_present'] else f"empty ({q['optical_pp_mV']:.2f} mV)"),
+        ('Optical (PPG) channel', f"working ({q['ppg_peaks']} peaks)" if q['optical_present'] else f"empty ({q['optical_pp_mV']:.2f} mV)"),
         ('Heart rate', f"{f['HR']:.1f} bpm" if f else '–'),
-        ('RMSSD', f"{f['RMSSD']:.1f} ms" if f else '–'),
-    ], columns=['Check', 'Result'])
+        ('RMSSD (vagal HRV)', f"{f['RMSSD']:.1f} ms" if f else '–'),
+        ('Poincaré SD1/SD2', f"{f['SD1_SD2']:.2f}" if f and 'SD1_SD2' in f else '–'),
+        ('LF/HF autonomic ratio', f"{f['LF_HF']:.2f} (HF {f['HF_nu']:.0f} %)" if f and 'LF_HF' in f else '–'),
+    ]
+    if q.get('pat_ms') is not None:
+        rows.append(('ECG→PPG Pulse Arrival Time (PAT)', f"{q['pat_ms']:.0f} ± {q['pat_sd_ms']:.0f} ms"))
+    return pd.DataFrame(rows, columns=['Check', 'Result'])
 
 
 def contribute(data, name, uid, condition, kss, note):
@@ -125,13 +263,18 @@ page = st.sidebar.radio('Go to', ['① Record baseline', '② Check for fatigue'
 model = get_model()
 if model:
     ev = model.meta.get('evaluation', {})
-    st.sidebar.caption(f"Model trained {model.meta['trained_at'][:16].replace('T', ' ')} on "
-                       f"{model.meta['training']['recordings']} recordings / {model.meta['training']['people']} people. "
-                       + (f"Held-out accuracy {ev['correct']}/{ev['comparisons']} comparisons." if ev else ''))
+    sev = (model.single_meta or {}).get('evaluation', {})
+    st.sidebar.caption(
+        f"Model trained {model.meta['trained_at'][:16].replace('T', ' ')} on "
+        f"{model.meta['training']['recordings']} recordings / {model.meta['training']['people']} people. "
+        + (f"Personal-baseline LORO: {ev['correct']}/{ev['comparisons']} ({ev['accuracy']:.0%}). " if ev else '')
+        + (f"Zero-baseline LORO: {sev['clean_correct']}/{sev['clean_recordings']} ({sev['clean_accuracy']:.0%})." if sev else '')
+    )
 else:
     st.sidebar.error('No model yet — run `python train_delta_model.py`.')
-st.sidebar.info('How it works: everyone records a **rested baseline** once. Later recordings are compared with '
-                '**their own** baseline, and the model judges whether the change looks like fatigue.')
+st.sidebar.info('Supports **two modes**:\n'
+                '1. **Personal-Baseline Check:** compares a person against their own saved rested baseline.\n'
+                '2. **New Person Quick Check (Zero-Baseline):** classifies a single recording using subject-invariant HRV & waveform ratios.')
 
 # ---------------- ① baseline ----------------
 if page == '① Record baseline':
@@ -139,7 +282,7 @@ if page == '① Record baseline':
     st.markdown('Record while **rested and healthy**: sit quietly for 5 minutes, then capture **3–5 minutes** without '
                 'talking or moving. Check that the ECG and optical (PPG) waves look clean in the TI GUI, then export '
                 '`AFE4950_CAPTURED_DATA.csv` (manual §6.3) and upload it here. **Mark the electrode spots** so later '
-                'recordings use exactly the same placement.')
+                'recordings use the same placement.')
     uid = safe_id(st.text_input('Name or ID', ''))
     data, name = recording_input('baseline')
     if data:
@@ -148,7 +291,10 @@ if page == '① Record baseline':
         c1, c2 = st.columns([1, 2])
         c1.dataframe(quality_table(res), hide_index=True, width='stretch')
         c2.plotly_chart(overview_figure(res, 'Whole recording (grey = trimmed unstable start/end)'), width='stretch')
-        c2.plotly_chart(ecg_figure(res, 'First 10 s of the stable part'), width='stretch')
+        c2.plotly_chart(ecg_figure(res, 'First 10 s of the stable part — Clean ECG & R-peaks'), width='stretch')
+        pfig = ppg_figure(res)
+        if pfig is not None:
+            c2.plotly_chart(pfig, width='stretch')
         if res['usable']:
             if uid in users():
                 st.warning(f'**{uid}** already has a baseline. Saving will replace it.')
@@ -170,14 +316,25 @@ if page == '① Record baseline':
 # ---------------- ② check ----------------
 elif page == '② Check for fatigue':
     st.title('② Check for fatigue')
-    if not users():
-        st.info('No baselines yet. Start with **① Record baseline**.'); st.stop()
     if model is None:
         st.error('No trained model. Run `python train_delta_model.py`.'); st.stop()
-    uid = st.selectbox('Person', users())
-    base = load_baseline(uid)
-    st.caption(f"Baseline: {base['source']} (saved {base['saved_at'][:16].replace('T', ' ')}) — "
-               f"HR {base['features']['HR']:.0f} bpm, RMSSD {base['features']['RMSSD']:.0f} ms")
+
+    has_users = bool(users())
+    modes = ['Compare with saved personal baseline (Delta Mode)', 'New person / Single recording Quick Check (Zero-Baseline Mode)']
+    mode_pick = st.radio('Classification mode', modes if has_users else modes[1:], horizontal=True)
+    is_single = mode_pick.startswith('New person')
+
+    if not is_single:
+        uid = st.selectbox('Person', users())
+        base = load_baseline(uid)
+        st.caption(f"Baseline: {base['source']} (saved {base['saved_at'][:16].replace('T', ' ')}) — "
+                   f"HR {base['features']['HR']:.0f} bpm, RMSSD {base['features']['RMSSD']:.0f} ms, "
+                   f"SD1/SD2 {base['features']['SD1_SD2']:.2f}")
+    else:
+        uid = safe_id(st.text_input('Person Name or ID (optional, for logging)', 'new_person'))
+        base = None
+        st.caption('Zero-Baseline Mode: classifies a brand-new person from a single recording using placement-invariant physiological HRV & rate-corrected timing features.')
+
     data, name = recording_input('check')
     if not data:
         st.stop()
@@ -186,61 +343,109 @@ elif page == '② Check for fatigue':
     if not res['usable']:
         st.stop()
 
-    sim = beat_similarity(np.array(base['median_beat']), res['median_beat'])
-    p, contrib = model.predict(res['features'], base['features'])
-    lvl = model.level(p)
+    if not is_single:
+        sim = beat_similarity(np.array(base['median_beat']), res['median_beat'])
+        p, contrib = model.predict(res['features'], base['features'], beat_match=sim)
+        lvl = model.level(p, mode='delta')
+        thr_used = model.threshold
+    else:
+        sim = 1.0
+        p, contrib = model.predict_single(res['features'])
+        lvl = model.level(p, mode='single')
+        thr_used = (model.single_meta or {}).get('threshold', model.threshold)
+
     fatigued = lvl == 'fatigue'
     col = {'fatigue': '#c9302c', 'watch': '#d98c00', 'normal': '#2e8b57'}[lvl]
     verdict = {'fatigue': 'FATIGUE', 'watch': 'WATCH', 'normal': 'NORMAL'}[lvl]
     c = st.columns([1.3, 1, 1, 1])
     c[0].markdown(f"<div style='background:{col};color:#fff;border-radius:10px;padding:18px;text-align:center'>"
                   f"<div style='font-size:28px;font-weight:700'>{verdict}</div>"
-                  f"<div>P(fatigue) = {p:.2f} · alarm at ≥ {model.threshold:.2f}</div></div>", unsafe_allow_html=True)
-    c[1].metric('Heart rate', f"{res['features']['HR']:.0f} bpm", f"{res['features']['HR'] - base['features']['HR']:+.0f} vs baseline", delta_color='off')
-    c[2].metric('RMSSD', f"{res['features']['RMSSD']:.0f} ms", f"{res['features']['RMSSD'] - base['features']['RMSSD']:+.0f} vs baseline", delta_color='off')
-    c[3].metric('Beat-shape match', f'{sim:.3f}', help='1.000 = identical average heartbeat shape. Below ~0.98 the electrodes were probably placed differently.')
-    if sim < 0.98:
-        st.warning(f'The heartbeat shape differs from the baseline (match {sim:.3f}). Electrodes were probably placed '
-                   'differently, so R-peak height and T-wave changes, which the model relies on most, may reflect placement, not fatigue.')
-    if fatigued:
-        st.error('Serious fatigue signs compared with your baseline. Take a **breathing break** (e.g. 2 min of slow '
-                 'breathing, 6 breaths/min) and re-check later.')
-    elif lvl == 'watch':
-        st.info('Some change from your baseline, but not enough to call it fatigue. No action needed; re-check later if you feel tired.')
+                  f"<div>P(fatigue) = {p:.2f} · alarm at ≥ {thr_used:.2f}</div></div>", unsafe_allow_html=True)
 
-    st.subheader('Why: change from your baseline')
+    ref_feats = base['features'] if base else (model.single_meta or {}).get('rested_reference', res['features'])
+    ref_label = 'vs baseline' if base else 'vs rested norm'
+    c[1].metric('Heart rate', f"{res['features']['HR']:.0f} bpm", f"{res['features']['HR'] - ref_feats['HR']:+.0f} {ref_label}", delta_color='off')
+    c[2].metric('RMSSD (vagal HRV)', f"{res['features']['RMSSD']:.1f} ms", f"{res['features']['RMSSD'] - ref_feats['RMSSD']:+.1f} {ref_label}", delta_color='off')
+    if not is_single:
+        c[3].metric('Beat-shape match', f'{sim:.3f}', help='1.000 = identical average heartbeat shape. Below 0.98, R_mV is automatically muted so electrode shift does not cause false alarms.')
+        if sim < 0.98:
+            st.warning(f'The heartbeat shape differs from baseline (match {sim:.3f}). Electrodes were probably placed differently — '
+                       'the model automatically muted R-peak voltage (`R_mV`) and judged purely on HRV and normalized timing features.')
+    else:
+        c[3].metric('Poincaré SD1/SD2', f"{res['features']['SD1_SD2']:.2f}", f"{res['features']['SD1_SD2'] - ref_feats['SD1_SD2']:+.2f} {ref_label}", delta_color='off')
+
+    if fatigued:
+        st.error('Serious fatigue signs detected. Take a **breathing break** (e.g. 2 min of slow breathing, 6 breaths/min) and re-check later.')
+    elif lvl == 'watch':
+        st.info('Mild autonomic shift toward fatigue, below the serious-fatigue alarm threshold. Re-check later if you feel tired.')
+
+    st.subheader('Why: physiological feature breakdown')
     t = contrib.copy()
     t['Measure'] = [f"{LABELS[k][0]} ({LABELS[k][1]})" if LABELS[k][1] else LABELS[k][0] for k in t.feature]
-    t['Direction'] = np.where(t.push_to_fatigue > 0, '→ fatigue', '→ normal')
+    t['Direction'] = np.where(t.push_to_fatigue > 0, '→ fatigue', np.where(t.push_to_fatigue < 0, '→ normal', 'muted (placement)'))
+    base_col_name = 'Baseline' if base else 'Rested Ref'
     st.dataframe(t[['Measure', 'baseline', 'new', 'change', 'pct_change', 'push_to_fatigue', 'Direction']].rename(columns={
-        'baseline': 'Baseline', 'new': 'Now', 'change': 'Change', 'pct_change': 'Change %', 'push_to_fatigue': 'Effect on decision'}).round(2),
+        'baseline': base_col_name, 'new': 'Now', 'change': 'Change', 'pct_change': 'Change %', 'push_to_fatigue': 'Effect on decision'}).round(2),
         hide_index=True, width='stretch')
+
+    base_res, base_wave_label = load_baseline_analysis(uid if not is_single else None, base)
+
+    st.subheader('Visual Comparison: Original Baseline vs. New Recording')
+    if base_wave_label:
+        st.caption(f"Comparing **New recording (`{name}`)** against **{base_wave_label}** (green = original/rested, {verdict.lower()} color = new check).")
 
     g1, g2 = st.columns(2)
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=np.array(base['hr_t']) - base['hr_t'][0], y=base['hr'], name='baseline', line=dict(color='#2e8b57')))
-    fig.add_trace(go.Scatter(x=res['t_rr'] - res['t_rr'][0], y=60 / res['rr'], name='now', line=dict(color=col)))
-    fig.update_layout(height=300, title='Beat-to-beat heart rate', xaxis_title='seconds into stable part', yaxis_title='bpm',
+    if base:
+        fig.add_trace(go.Scatter(x=np.array(base['hr_t']) - base['hr_t'][0], y=base['hr'], name='original / baseline', line=dict(color='#2e8b57', width=2)))
+    elif base_res is not None:
+        fig.add_trace(go.Scatter(x=base_res['t_rr'] - base_res['t_rr'][0], y=60 / base_res['rr'], name='rested reference', line=dict(color='#2e8b57', width=2)))
+    fig.add_trace(go.Scatter(x=res['t_rr'] - res['t_rr'][0], y=60 / res['rr'], name='new recording (now)', line=dict(color=col, width=2)))
+    fig.update_layout(height=300, title='Beat-to-beat heart rate (Original vs. Now)', xaxis_title='seconds into stable part', yaxis_title='bpm',
                       margin=dict(l=10, r=10, t=35, b=10))
     g1.plotly_chart(fig, width='stretch')
-    mb, mn = np.array(base['median_beat']), res['median_beat']; tb = (np.arange(len(mb)) - int(PRE*FS_ECG)) / FS_ECG * 1000
+
+    mb = np.array(base['median_beat']) if base else (base_res['median_beat'] if base_res is not None else res['median_beat'])
+    mn = res['median_beat']
+    tb = (np.arange(len(mb)) - int(PRE*FS_ECG)) / FS_ECG * 1000
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=tb, y=mb, name='baseline', line=dict(color='#2e8b57', width=2)))
-    fig.add_trace(go.Scatter(x=tb[:len(mn)], y=mn, name='now', line=dict(color=col, width=2)))
-    fig.update_layout(height=300, title='Average heartbeat shape', xaxis_title='ms from R-peak', yaxis_title='mV',
+    fig.add_trace(go.Scatter(x=tb, y=mb, name='original / baseline', line=dict(color='#2e8b57', width=2)))
+    fig.add_trace(go.Scatter(x=tb[:len(mn)], y=mn, name='new recording (now)', line=dict(color=col, width=2)))
+    fig.update_layout(height=300, title='Average heartbeat shape (P–QRS–T Waveform: Original vs. Now)', xaxis_title='ms from R-peak', yaxis_title='mV',
                       margin=dict(l=10, r=10, t=35, b=10))
     g2.plotly_chart(fig, width='stretch')
-    st.plotly_chart(ecg_figure(res, 'New recording — first 10 s of the stable part'), width='stretch')
 
-    hist = USERS / uid / 'history.csv'
-    key = f'logged_{uid}_{hash(data)}'
+    # Overlaid 10 s ECG comparison (Original vs. New)
+    st.plotly_chart(ecg_comparison_figure(base_res, res, base_wave_label, new_col=col, seconds=10), width='stretch')
+
+    # Overlaid 10 s Optical (PPG) comparison (Original vs. New)
+    pfig_comp = ppg_comparison_figure(base_res, res, new_col='#e67e22', seconds=10)
+    if pfig_comp is not None:
+        st.plotly_chart(pfig_comp, width='stretch')
+
+    with st.expander('🔍 View side-by-side / separate 10 s ECG & PPG traces (Original vs. New)'):
+        s1, s2 = st.columns(2)
+        if base_res is not None:
+            s1.plotly_chart(ecg_figure(base_res, f"Original / Baseline ECG — first 10 s ({base_res['features']['HR']:.0f} bpm)"), width='stretch')
+            bp_fig = ppg_figure(base_res, 'Original / Baseline Optical PPG — first 10 s')
+            if bp_fig is not None:
+                s1.plotly_chart(bp_fig, width='stretch')
+        s2.plotly_chart(ecg_figure(res, f"New Recording ECG — first 10 s ({res['features']['HR']:.0f} bpm)"), width='stretch')
+        np_fig = ppg_figure(res, 'New Recording Optical PPG — first 10 s')
+        if np_fig is not None:
+            s2.plotly_chart(np_fig, width='stretch')
+
+    user_dir = USERS / uid
+    user_dir.mkdir(parents=True, exist_ok=True)
+    hist = user_dir / 'history.csv'
+    key = f'logged_{uid}_{is_single}_{hash(data)}'
     if key not in st.session_state:
         pd.DataFrame([dict(time=datetime.now().isoformat(timespec='seconds'), recording=name, result=verdict,
                            p_fatigue=round(p, 3), hr=round(res['features']['HR'], 1), rmssd=round(res['features']['RMSSD'], 1),
                            beat_match=round(sim, 3))]).to_csv(hist, mode='a', header=not hist.exists(), index=False)
         st.session_state[key] = True
-        if fatigued:                                    # serious fatigue -> one HR report per check
-            rep = send_report(build_report(uid, name, p, model.threshold, res['features'], base['features'], contrib, sim))
+        if fatigued:
+            rep = send_report(build_report(uid, name, p, thr_used, res['features'], ref_feats, contrib, sim))
             st.session_state[f'hr_{key}'] = rep
     rep = st.session_state.get(f'hr_{key}')
     if rep:
@@ -260,12 +465,11 @@ elif page == '② Check for fatigue':
 # ---------------- history ----------------
 elif page == 'History':
     st.title('History')
-    if not users():
-        st.info('No users yet.'); st.stop()
-    uid = st.selectbox('Person', users())
+    all_users = sorted(p.name for p in USERS.glob('*') if (p / 'history.csv').exists()) if USERS.exists() else []
+    if not all_users:
+        st.info('No check history yet.'); st.stop()
+    uid = st.selectbox('Person', all_users)
     hist = USERS / uid / 'history.csv'
-    if not hist.exists():
-        st.info('No checks yet for this person.'); st.stop()
     h = pd.read_csv(hist)
     fig = go.Figure(go.Scatter(x=h.time, y=h.p_fatigue, mode='lines+markers',
                                marker=dict(color=h.result.map({'FATIGUE': '#c9302c', 'WATCH': '#d98c00'}).fillna('#2e8b57'), size=10)))
@@ -309,45 +513,56 @@ else:
         st.error('No model trained yet.')
     else:
         m, tr, ev = model.meta, model.meta['training'], model.meta.get('evaluation', {})
-        st.markdown(f"""
-**What it learns:** the *change* from a person's own rested baseline that indicates fatigue.
-Training examples are pairs of recordings from the **same person**:
-- **fatigue examples:** a fatigue recording minus each of that person's normal recordings ({tr['fatigue_pairs']} pairs)
-- **no-change examples:** a normal recording minus another normal of the same person, and the first half vs. the second half of long normal recordings ({tr['no_change_pairs']} pairs)
+        sm = model.single_meta or {}
+        sev = sm.get('evaluation', {})
+        st.markdown(rf"""
+**Dual Physiological Architecture (14 ECG/HRV features + Optical PPG analysis):**
+1. **Personal-Baseline Delta Model:** learns the *within-person change* ($\Delta = \text{{new}} - \text{{baseline}}$) across 14 physiological HRV & waveform features (`HR`, `HR_range`, `SDNN`, `RMSSD`, `pNN50`, `CVSD`, `SD1/SD2`, `log10 Stress Index`, `LF/HF`, `HF_nu`, `R_mV`, `T/R ratio`, `RT_ms`, `RTc_ms`), regularized with human autonomic priors and protected against electrode shift (`R_mV` is muted when `beat_similarity < 0.98`).
+2. **Zero-Baseline Single-Recording Model:** classifies a brand-new person from a single recording using 10 placement-invariant HRV & rate-corrected timing features (`SINGLE_FEATURES`), while filtering out un-rested baselines (`HR > 95 bpm` and `RMSSD < 15 ms`).
 
-**Model:** standardised logistic regression on 8 changes (heart rate, HR range, SDNN, RMSSD, pNN50, R-peak height, T/R ratio, R-to-T time).
 Trained {m['trained_at'].replace('T', ' ')} on **{tr['recordings']} recordings from {tr['people']} people** ({tr['normal_recordings']} normal, {tr['fatigue_recordings']} fatigue).
 """)
         if ev:
-            st.subheader('Honest test: leave-one-recording-out')
-            st.markdown(f"Each recording is removed from training, then compared with each of that person's other normal baselines "
-                        f"as if it were a new upload: **{ev['correct']}/{ev['comparisons']} correct ({ev['accuracy']:.0%})**. "
-                        f"The alarm is tuned to fire only for **serious** fatigue (P ≥ {model.threshold:.2f}, set just above the "
-                        f"highest held-out normal score): serious fatigue caught **{ev['fatigue_caught']}**, normal correctly left alone "
-                        f"**{ev['normal_correct']}** (false alarms: {ev.get('false_alarms', '–')}). "
-                        f"Fatigue at least at *watch* level: {ev.get('fatigue_watch_or_alarm', '–')}.")
+            st.subheader('1. Personal-Baseline Delta Model — Leave-One-Recording-Out')
+            st.markdown(f"Held-out recording vs. each valid rested normal baseline of the same person: "
+                        f"**{ev['correct']}/{ev['comparisons']} correct ({ev['accuracy']:.0%})** · "
+                        f"serious fatigue caught **{ev['fatigue_caught']}** · normal left alone **{ev['normal_correct']}** "
+                        f"(false alarms: **{ev.get('false_alarms', 0)}**).")
             c1, c2 = st.columns([1, 2])
             c1.dataframe(pd.DataFrame(ev['confusion'], index=['true normal', 'true fatigue'],
                                       columns=['predicted normal', 'predicted fatigue']), width='stretch')
             coef = pd.Series(m['coef'], [LABELS[k][0] for k in m['features']]).sort_values()
             fig = go.Figure(go.Bar(x=coef.values, y=coef.index, orientation='h',
                                    marker_color=np.where(coef.values > 0, '#c9302c', '#2e8b57')))
-            fig.update_layout(height=300, title='What the model uses (+ : an increase points to fatigue)', margin=dict(l=10, r=10, t=35, b=10))
+            fig.update_layout(height=360, title='Personal-Baseline Delta Weights (+ : increase points to fatigue)', margin=dict(l=10, r=10, t=35, b=10))
             c2.plotly_chart(fig, width='stretch')
-            with st.expander('All held-out comparisons'):
+            with st.expander('All held-out personal-baseline comparisons'):
                 st.dataframe(pd.DataFrame(ev['details']), hide_index=True, width='stretch')
-        st.warning('**Limits right now:** only 2 people and about 30 s recordings with an empty optical channel. The strongest '
-                   'signal is a drop in R-peak height, which also depends on electrode placement. Treat results as a prototype '
-                   'until more recordings (3–5 min, same electrode spots, working PPG) are collected.')
+
+        if sev:
+            st.subheader('2. Zero-Baseline Single-Recording Model (New Person) — Leave-One-Recording-Out')
+            st.markdown(f"Classifies a single recording without any prior baseline: **{sev['clean_correct']}/{sev['clean_recordings']} "
+                        f"correct ({sev['clean_accuracy']:.0%})** across all valid rested baselines and fatigue recordings "
+                        f"(un-rested baselines automatically excluded from reference norm: `{', '.join(sm.get('unrested_baselines_excluded', []))}`).")
+            s_coef = pd.Series(sm['coef'], [LABELS[k][0] for k in sm['features']]).sort_values()
+            fig2 = go.Figure(go.Bar(x=s_coef.values, y=s_coef.index, orientation='h',
+                                    marker_color=np.where(s_coef.values > 0, '#c9302c', '#2e8b57')))
+            fig2.update_layout(height=320, title='Zero-Baseline Single-Recording Weights (+ : higher value points to fatigue)', margin=dict(l=10, r=10, t=35, b=10))
+            st.plotly_chart(fig2, width='stretch')
+            with st.expander('All held-out single-recording predictions'):
+                st.dataframe(pd.DataFrame(sev['details']), hide_index=True, width='stretch')
+
     st.subheader('Training data')
     man = pd.read_csv(MANIFEST)
     st.dataframe(man, hide_index=True, width='stretch')
-    st.caption(f'{len(man)} recordings in data_manifest.csv. Add rows (file, person, condition) or contribute from the ② page, then retrain.')
+    st.caption(f'{len(man)} rows in data_manifest.csv. Add rows (file, person, condition) or contribute from the ② page, then retrain.')
     if st.button('🔁 Retrain model now', type='primary'):
         from train_delta_model import train
-        with st.spinner('Preprocessing every recording and retraining…'):
+        with st.spinner('Preprocessing every recording and retraining both models…'):
             new = train(verbose=False)
         e = new.get('evaluation', {})
+        se = new.get('single_model', {}).get('evaluation', {})
         st.success(f"Retrained on {new['training']['recordings']} recordings. "
-                   + (f"Held-out: {e['correct']}/{e['comparisons']} correct." if e else ''))
+                   + (f"Personal-baseline LORO: {e['correct']}/{e['comparisons']} ({e['accuracy']:.0%}). " if e else '')
+                   + (f"Zero-baseline LORO: {se['clean_correct']}/{se['clean_recordings']} ({se['clean_accuracy']:.0%})." if se else ''))
         st.rerun()

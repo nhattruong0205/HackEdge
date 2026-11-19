@@ -4,6 +4,7 @@ normal/second_attempt.csv,B,normal,,same recording as earlier dataset user1
 normal/third_attempt.csv,A,normal,,healthy baseline
 normal/fourth_attempt.csv,A,normal,,healthy baseline
 normal/fifth_attempt.csv,A,normal,,healthy baseline
+data/normal/sixth_attempt.csv,B,normal,,rested baseline; optical working
 fatigue/first_attempt.csv,A,fatigue,,sick and tired
 fatigue/second_attempt.csv,A,fatigue,,sick and tired
 fatigue/third_attempt.csv,A,fatigue,,sick and tired

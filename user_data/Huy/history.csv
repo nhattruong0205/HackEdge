@@ -8,3 +8,5 @@ time,recording,result,p_fatigue,hr,rmssd,beat_match
 2026-11-11T23:25:26,fatigue/third_attempt.csv,NORMAL,0.005,108.0,7.0,0.97
 2026-11-11T23:25:34,fatigue/first_attempt.csv,NORMAL,0.028,106.7,7.7,0.96
 2026-11-11T23:25:37,fatigue/second_attempt.csv,NORMAL,0.039,104.6,5.4,0.965
+2026-11-18T16:47:20,baseline.csv,NORMAL,0.075,65.1,38.6,1.0
+2026-11-18T16:47:47,AFE4950_CAPTURED_DATA.csv,NORMAL,0.003,72.7,39.3,0.825
