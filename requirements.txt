@@ -1,0 +1,10 @@
+# Laptop: dashboard, training and analysis (tested with Python 3.12)
+numpy>=1.26
+scipy>=1.14
+pandas>=2.2
+scikit-learn>=1.5
+streamlit>=1.54
+plotly>=6.0
+# only for sending files to the board over the serial console
+pyserial>=3.5
+# The SK-AM62B board needs only numpy (board_shift.py, board_classifier.py).

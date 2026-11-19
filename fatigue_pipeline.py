@@ -157,6 +157,14 @@ def beat_similarity(a, b):
 
 
 # ---------------- model ----------------
+SHIFT_FEATURES = ['HR', 'SDNN', 'RMSSD']   # consistent normal->fatigue shift across people: HR up, HRV down
+
+
+def shift(new_feats, base_feats, features=SHIFT_FEATURES):
+    """Percent-style change from the person's own baseline: log(new / baseline) per feature."""
+    return [float(np.log(new_feats[k] / base_feats[k])) for k in features]
+
+
 class DeltaModel:
     def __init__(self, path=MODEL_PATH):
         m = json.loads(Path(path).read_text())
@@ -172,7 +180,8 @@ class DeltaModel:
 
     def predict(self, new_feats, base_feats):
         delta = np.array([new_feats[k] - base_feats[k] for k in self.features])
-        z = (delta - self.mean) / self.scale
+        x = np.array(shift(new_feats, base_feats, self.features)) if self.meta.get('delta') == 'log_ratio' else delta
+        z = (x - self.mean) / self.scale
         p = float(1 / (1 + np.exp(-(z @ self.coef + self.intercept))))
         contrib = pd.DataFrame({'feature': self.features, 'baseline': [base_feats[k] for k in self.features],
                                 'new': [new_feats[k] for k in self.features], 'change': delta,

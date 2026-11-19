@@ -6,6 +6,7 @@ Run:  python3 -m streamlit run app.py
   History            : past checks per person
   Model & retraining : how the model was trained, honest held-out results, retrain button
 """
+import hashlib
 import json
 import shutil
 from datetime import datetime
@@ -52,20 +53,37 @@ def load_baseline(uid):
 def samples():
     out = {}
     for folder in ('normal', 'fatigue'):
-        for p in sorted((ROOT / folder).glob('*.csv')):
+        for p in sorted((ROOT / 'data' / folder).glob('*.csv')):
             out[f'{folder}/{p.name}'] = p
     return out
 
 
-def recording_input(key):
+def recording_input(key, action='▶ Use this recording'):
+    """Choose a recording (upload or sample). Nothing is analyzed or saved until the button is clicked."""
     up = st.file_uploader('TI AFE4950 export (.csv)', type='csv', key=f'up_{key}')
-    if up is not None:
-        return up.getvalue(), up.name
     opts = samples()
-    pick = st.selectbox('…or use a sample recording', ['—'] + list(opts), key=f'sample_{key}')
-    if pick != '—':
-        return opts[pick].read_bytes(), pick
-    return None, None
+    pick = st.selectbox('…or use a sample recording', ['—'] + list(opts), key=f'sample_{key}',
+                        disabled=up is not None)
+    if up is not None:
+        data, name = up.getvalue(), up.name
+    elif pick != '—':
+        data, name = opts[pick].read_bytes(), pick
+    else:
+        st.session_state.pop(f'use_{key}', None)
+        return None, None
+    sig = (name, len(data), hashlib.md5(data).hexdigest())
+    if st.session_state.get(f'use_{key}') != sig:
+        st.caption(f'Selected: **{name}**')
+        if st.button(action, type='primary', key=f'btn_{key}'):
+            st.session_state[f'use_{key}'] = sig
+            st.rerun()
+        return None, None
+    c1, c2 = st.columns([4, 1])
+    c1.caption(f'Using: **{name}**')
+    if c2.button('✖ Clear', key=f'clear_{key}'):
+        st.session_state.pop(f'use_{key}', None)
+        st.rerun()
+    return data, name
 
 
 def show_warnings(res, role):
@@ -141,7 +159,7 @@ if page == '① Record baseline':
                 '`AFE4950_CAPTURED_DATA.csv` (manual §6.3) and upload it here. **Mark the electrode spots** so later '
                 'recordings use exactly the same placement.')
     uid = safe_id(st.text_input('Name or ID', ''))
-    data, name = recording_input('baseline')
+    data, name = recording_input('baseline', '▶ Analyze this baseline')
     if data:
         res = run_analysis(data)
         show_warnings(res, 'baseline')
@@ -178,7 +196,7 @@ elif page == '② Check for fatigue':
     base = load_baseline(uid)
     st.caption(f"Baseline: {base['source']} (saved {base['saved_at'][:16].replace('T', ' ')}) — "
                f"HR {base['features']['HR']:.0f} bpm, RMSSD {base['features']['RMSSD']:.0f} ms")
-    data, name = recording_input('check')
+    data, name = recording_input('check', '▶ Check this recording')
     if not data:
         st.stop()
     res = run_analysis(data)
@@ -200,8 +218,9 @@ elif page == '② Check for fatigue':
     c[2].metric('RMSSD', f"{res['features']['RMSSD']:.0f} ms", f"{res['features']['RMSSD'] - base['features']['RMSSD']:+.0f} vs baseline", delta_color='off')
     c[3].metric('Beat-shape match', f'{sim:.3f}', help='1.000 = identical average heartbeat shape. Below ~0.98 the electrodes were probably placed differently.')
     if sim < 0.98:
-        st.warning(f'The heartbeat shape differs from the baseline (match {sim:.3f}). Electrodes were probably placed '
-                   'differently, so R-peak height and T-wave changes, which the model relies on most, may reflect placement, not fatigue.')
+        st.warning(f'The heartbeat shape differs from the baseline (match {sim:.3f}). Check that the right person is '
+                   'selected; otherwise the electrodes were placed differently. The model uses heart rate and HRV, '
+                   'which are not affected by electrode placement.')
     if fatigued:
         st.error('Serious fatigue signs compared with your baseline. Take a **breathing break** (e.g. 2 min of slow '
                  'breathing, 6 breaths/min) and re-check later.')

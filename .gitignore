@@ -1,0 +1,14 @@
+# secrets / local only
+pass.md
+.DS_Store
+__pycache__/
+*.pyc
+# app runtime state (created when the app is used)
+user_data/
+data/contributed/
+# LaTeX build files
+report/*.aux
+report/*.log
+report/*.fls
+report/*.fdb_latexmk
+report/*.out

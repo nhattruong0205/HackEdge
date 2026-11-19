@@ -5,7 +5,10 @@ Every recording is listed in data_manifest.csv with the PERSON it belongs to and
   fatigue example  : features(fatigue recording) − features(normal recording of the same person)
   no-change example: features(normal) − features(another normal of the same person),
                      and first half vs. second half of each normal recording (≥ 40 s stable)
-A standardised logistic regression learns which changes mean fatigue.
+A change is measured as a PERCENT change (log ratio new/baseline) of heart rate, SDNN and RMSSD,
+so people with different resting HR/HRV are on the same scale. A standardised logistic regression
+learns which changes mean fatigue. Recordings whose condition is not 'normal' or 'fatigue'
+(e.g. 'unrested') are ignored.
 
 Honest evaluation: leave-one-recording-out. Each recording is removed from training, then
 compared against every normal baseline of the same person as if it were a new upload.
@@ -31,8 +34,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from fatigue_pipeline import FEATURES, MODEL_PATH, ROOT, analyze, load_recording
+from fatigue_pipeline import MODEL_PATH, ROOT, SHIFT_FEATURES, analyze, load_recording, shift
 
+FEATURES = SHIFT_FEATURES
 MANIFEST = ROOT / 'data_manifest.csv'
 WATCH_THRESHOLD = 0.5      # above this: "watch" (some change from baseline, no alarm)
 MIN_SERIOUS = 0.6          # serious-fatigue threshold is never below this …
@@ -76,14 +80,14 @@ def build_pairs(recs, halves, exclude=()):
         fatigued = [k for k, v in mine.items() if v['condition'] == 'fatigue']
         for f in fatigued:
             for n in normals:
-                X.append([mine[f]['feats'][c] - mine[n]['feats'][c] for c in FEATURES]); y.append(1); info.append((f, n))
+                X.append(shift(mine[f]['feats'], mine[n]['feats'])); y.append(1); info.append((f, n))
         for a, b in permutations(normals, 2):
-            X.append([mine[a]['feats'][c] - mine[b]['feats'][c] for c in FEATURES]); y.append(0); info.append((a, b))
+            X.append(shift(mine[a]['feats'], mine[b]['feats'])); y.append(0); info.append((a, b))
     for k, (h1, h2) in halves.items():
         if k in exclude:
             continue
         for p, q in ((h2, h1), (h1, h2)):
-            X.append([p[c] - q[c] for c in FEATURES]); y.append(0); info.append((k + ' (2nd half)', k + ' (1st half)'))
+            X.append(shift(p, q)); y.append(0); info.append((k + ' (2nd half)', k + ' (1st half)'))
     return np.array(X), np.array(y), info
 
 
@@ -95,6 +99,8 @@ def evaluate(recs, halves):
     """Leave-one-recording-out: held-out recording vs. each remaining normal baseline of the same person."""
     rows = []
     for held in recs:
+        if recs[held]['condition'] not in ('normal', 'fatigue'):          # e.g. 'unrested': not scored
+            continue
         X, y, _ = build_pairs(recs, halves, exclude={held})
         if len(set(y)) < 2:
             continue
@@ -102,7 +108,7 @@ def evaluate(recs, halves):
         person = recs[held]['person']
         baselines = [k for k, v in recs.items() if k != held and v['person'] == person and v['condition'] == 'normal']
         for base in baselines:
-            d = np.array([[recs[held]['feats'][c] - recs[base]['feats'][c] for c in FEATURES]])
+            d = np.array([shift(recs[held]['feats'], recs[base]['feats'])])
             p = float(m.predict_proba(d)[0, 1])
             rows.append(dict(new_recording=held, baseline=base, person=person, true=recs[held]['condition'],
                              p_fatigue=round(p, 3), predicted='fatigue' if p >= .5 else 'normal'))
@@ -147,7 +153,7 @@ def train(manifest=MANIFEST, out=MODEL_PATH, verbose=True):
                        fatigue_watch_or_alarm=f"{int((ev[ev.true == 'fatigue'].level != 'normal').sum())}/{cm.loc['fatigue'].sum()}",
                        confusion=cm.values.tolist(), details=ev.to_dict('records'),
                        per_recording=per_rec.round(3).to_dict('records'))
-    model = dict(type='baseline_delta_logistic_regression', features=FEATURES,
+    model = dict(type='baseline_shift_logistic_regression', delta='log_ratio', features=FEATURES,
                  mean=sc.mean_.tolist(), scale=sc.scale_.tolist(), coef=lr.coef_[0].tolist(),
                  intercept=float(lr.intercept_[0]), threshold=threshold, watch_threshold=WATCH_THRESHOLD,
                  trained_at=datetime.now().isoformat(timespec='seconds'),
