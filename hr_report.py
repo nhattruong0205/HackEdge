@@ -22,7 +22,7 @@ import pandas as pd
 from fatigue_pipeline import LABELS, ROOT
 
 REPORTS = ROOT / 'hr_reports.csv'
-SEVERITY_BANDS = [(0.9, 'SEVERE'), (0.8, 'HIGH'), (0.0, 'MODERATE')]   # by P(fatigue), only used once flagged
+SEVERITY_BANDS = [(0.9, 'SEVERE'), (0.0, 'HIGH')]   # by P(fatigue), only used once flagged (P >= 0.8); below 0.8 = normal
 
 
 def severity(p, threshold):

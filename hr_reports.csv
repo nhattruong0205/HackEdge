@@ -1,4 +1,3 @@
 time,person,recording,severity,severity_score,p_fatigue,alarm_threshold,hr_now,hr_baseline,rmssd_now,rmssd_baseline,beat_match,signal_reliable,reasons,delivery
-2026-11-18T23:25:48,Nhat,fatigue/sixth_attempt.csv,SEVERE,75,0.901,0.6,106.4,65.1,10.4,38.6,0.943,False,Heart rate 65.14 → 106.41 (+63 %); RMSSD 38.64 → 10.38 (-73 %),logged only (no email/webhook configured)
-2026-11-18T23:40:46,Huy,fatigue/first_attempt.csv,SEVERE,84,0.936,0.6,106.7,69.7,7.7,31.8,0.901,False,Heart rate 69.70 → 106.69 (+53 %); RMSSD 31.82 → 7.69 (-76 %); SDNN 32.35 → 16.24 (-50 %),logged only (no email/webhook configured)
-2026-11-18T23:40:59,Huy,fatigue/sixth_attempt.csv,MODERATE,50,0.799,0.6,106.4,69.7,10.4,31.8,0.993,True,Heart rate 69.70 → 106.41 (+53 %); RMSSD 31.82 → 10.38 (-67 %),logged only (no email/webhook configured)
+2026-11-19T21:53:03,Nhat,A_test_first_attempt.csv,SEVERE,73,0.946,0.8,105.3,65.1,8.1,38.6,0.975,False,Heart rate 65.14 → 105.26 (+62 %); RMSSD 38.64 → 8.14 (-79 %); SDNN 38.88 → 24.12 (-38 %),logged only (no email/webhook configured)
+2026-11-19T21:53:29,Huy,B_test_second_attempt.csv,HIGH,19,0.838,0.8,97.8,69.8,16.7,45.1,0.99,True,Heart rate 69.78 → 97.83 (+40 %); RMSSD 45.11 → 16.68 (-63 %); SDNN 65.81 → 33.47 (-49 %),logged only (no email/webhook configured)

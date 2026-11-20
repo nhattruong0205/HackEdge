@@ -24,6 +24,7 @@ LABELS = {'HR': ('Heart rate', 'bpm'), 'HR_range': ('Heart-rate range', 'bpm'), 
           'T_over_R': ('T-wave / R-peak ratio', ''), 'RT_ms': ('R-to-T time', 'ms')}
 ROOT = Path(__file__).resolve().parent
 MODEL_PATH = ROOT / 'models' / 'delta_model.json'
+ALERT_MIN = 0.8        # FATIGUE only from P >= 0.8 (HIGH / SEVERE); lower scores count as normal (fewer false alarms)
 PRE, POST = 0.2, 0.4                       # median-beat window around each R-peak (s)
 
 
@@ -141,8 +142,6 @@ def quality_warnings(res, role):
         return w
     if q['stable_s'] < 60:
         w.append(('warn', f"Only {q['stable_s']:.0f} s of stable signal. Record 3–5 min for reliable HRV (LF/HF and breathing need ≥ 2 min)."))
-    if not q['optical_present']:
-        w.append(('warn', 'Optical (PPG) channel is empty: sensor not connected or LED off. Only ECG is used.'))
     if q['masked_pct'] > 10:
         w.append(('warn', f"{q['masked_pct']:.0f} % of the ECG was masked as motion/saturation. Sit still during recording."))
     if role == 'baseline' and f['HR'] > 100:
@@ -171,12 +170,13 @@ class DeltaModel:
         self.meta = m
         self.features = m['features']
         self.mean, self.scale = np.array(m['mean']), np.array(m['scale'])
-        self.coef, self.intercept, self.threshold = np.array(m['coef']), m['intercept'], m['threshold']
-        self.watch_threshold = m.get('watch_threshold', self.threshold)
+        self.coef, self.intercept = np.array(m['coef']), m['intercept']
+        self.threshold = max(m['threshold'], ALERT_MIN)     # "moderate" (P < 0.8) counts as normal
+        self.watch_threshold = self.threshold                # no separate "watch" level
 
     def level(self, p):
-        """'fatigue' = serious (alarm), 'watch' = mild change from baseline, 'normal'."""
-        return 'fatigue' if p >= self.threshold else 'watch' if p >= self.watch_threshold else 'normal'
+        """'fatigue' (P >= threshold) or 'normal'."""
+        return 'fatigue' if p >= self.threshold else 'normal'
 
     def predict(self, new_feats, base_feats):
         delta = np.array([new_feats[k] - base_feats[k] for k in self.features])

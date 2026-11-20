@@ -1,15 +1,15 @@
 file,person,condition,source,notes
-data/normal/first_attempt.csv,A,normal,A1,rested
-data/normal/second_attempt.csv,A,normal,A2,rested
-data/normal/third_attempt.csv,A,unrested,third,labelled normal but HR ~105-109; excluded (not at rest)
-data/normal/fourth_attempt.csv,A,unrested,fourth,labelled normal but HR ~105-109; excluded (not at rest)
-data/normal/fifth_attempt.csv,A,unrested,fifth,labelled normal but HR ~105-109; excluded (not at rest)
-data/fatigue/first_attempt.csv,A,fatigue,F1,
-data/fatigue/second_attempt.csv,A,fatigue,F2,
-data/fatigue/third_attempt.csv,A,fatigue,F3,
-data/fatigue/fourth_attempt.csv,A,fatigue,F4,
-data/fatigue/fifth_attempt.csv,A,fatigue,F5,
-data/normal/sixth_attempt.csv,C,normal,C6,
-data/normal/seventh_attempt.csv,C,normal,C7,
-data/normal/eighth_attempt.csv,C,normal,C8,
-data/fatigue/sixth_attempt.csv,C,fatigue,F6,
+data/normal/A_first_attempt.csv,A,normal,A1,rested
+data/normal/A_second_attempt.csv,A,normal,A2,rested
+data/normal/A_third_attempt.csv,A,unrested,third,labelled normal but HR ~105-109; excluded (not at rest)
+data/normal/A_fourth_attempt.csv,A,unrested,fourth,labelled normal but HR ~105-109; excluded (not at rest)
+data/normal/A_fifth_attempt.csv,A,unrested,fifth,labelled normal but HR ~105-109; excluded (not at rest)
+data/fatigue/A_first_attempt.csv,A,fatigue,F1,
+data/fatigue/A_second_attempt.csv,A,fatigue,F2,
+data/fatigue/A_third_attempt.csv,A,fatigue,F3,
+data/fatigue/A_fourth_attempt.csv,A,fatigue,F4,
+data/fatigue/A_fifth_attempt.csv,A,fatigue,F5,
+data/normal/B_sixth_attempt.csv,B,normal,B6,
+data/normal/B_seventh_attempt.csv,B,normal,B7,
+data/normal/B_eighth_attempt.csv,B,normal,B8,
+data/fatigue/B_sixth_attempt.csv,B,fatigue,F6,

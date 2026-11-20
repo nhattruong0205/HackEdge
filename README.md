@@ -55,8 +55,8 @@ streamlit run app.py                  # opens http://localhost:8501
 ```
 
 Using the dashboard:
-1. **① Record baseline** – create a person and upload a rested recording (or pick a sample, e.g. `normal/first_attempt.csv`).
-2. **② Check for fatigue** – pick the person and upload a new recording → NORMAL / WATCH / FATIGUE with the change in HR, SDNN, RMSSD.
+1. **① Record baseline** – create a person and upload a rested recording (or pick a sample, e.g. `normal/A_first_attempt.csv`).
+2. **② Check for fatigue** – pick the person and upload a new recording → NORMAL / FATIGUE with the change in HR, SDNN, RMSSD.
 3. **History** and **HR reports** show past checks. Optional delivery of HR reports: set `HR_EMAIL_TO`, `SMTP_HOST`,
    `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` (email) or `HR_WEBHOOK_URL` (Slack/Teams webhook).
 
@@ -101,7 +101,7 @@ python3 board_shift.py check A path/to/new_recording.csv
 # FATIGUE  P(fatigue) 0.99 | HR 67->107 (+60%)  SDNN 45->16 (-64%)  RMSSD 36->8 (-78%)
 ```
 
-`P < 0.5` → NORMAL, `0.5–0.6` → WATCH, `≥ 0.6` → FATIGUE.
+`P < 0.5` → NORMAL, `≥ 0.5` → FATIGUE.
 
 A new person first records a rested baseline (sit quietly 5 min, then record 2–3 min):
 

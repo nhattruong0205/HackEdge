@@ -4,8 +4,8 @@
   python3 board_classifier.py train              # train on data/normal + data/fatigue, honest evaluation, save model
   python3 board_classifier.py train --hrv-only   # use only heart-rate / HRV features (less sensitive to electrode placement)
   python3 board_classifier.py predict FILE.csv   # NORMAL / FATIGUE for a new recording
-  python3 board_classifier.py split --train normal/first_attempt.csv fatigue/first_attempt.csv ... \
-                                    --test normal/third_attempt.csv ...     # custom train / test split
+  python3 board_classifier.py split --train normal/A_first_attempt.csv fatigue/A_first_attempt.csv ... \
+                                    --test normal/A_third_attempt.csv ...     # custom train / test split
   (The personal-baseline fatigue model is in board_shift.py, which reuses the preprocessing below.)
 
 How it works
@@ -285,7 +285,7 @@ def train(feats):
 
 
 def split(train_names, test_names, feats):
-    """Train on the named recordings only, then test on other named recordings (e.g. normal/third_attempt.csv)."""
+    """Train on the named recordings only, then test on other named recordings (e.g. normal/A_third_attempt.csv)."""
     print('Preprocessing recordings…')
     recs = {r['name']: r for r in load_dataset(feats)}
     missing = [n for n in train_names + test_names if n not in recs]

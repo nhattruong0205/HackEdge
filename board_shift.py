@@ -6,7 +6,7 @@ change (log ratio). A logistic regression learns which shifts mean fatigue (HR u
 
 Commands (run in the folder that holds board_shift.py, board_classifier.py, board_manifest.csv, data/):
     python3 board_shift.py train                         # train + honest test, save models/shift_model.json
-    python3 board_shift.py check A new_recording.csv     # NORMAL / WATCH / FATIGUE vs person A's baseline
+    python3 board_shift.py check A new_recording.csv     # NORMAL / FATIGUE vs person A's baseline
     python3 board_shift.py enroll NAME rested1.csv ...   # give a new person a rested baseline
     python3 board_shift.py people                        # list people with a baseline
 
@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parent
 MANIFEST = ROOT / 'board_manifest.csv'
 MODEL = ROOT / 'models' / 'shift_model.json'
 SHIFT = ['HR', 'SDNN', 'RMSSD']
-WATCH, MIN_ALARM, MAX_ALARM, MARGIN = 0.5, 0.6, 0.9, 0.05
+WATCH, MIN_ALARM, MAX_ALARM, MARGIN = 0.8, 0.8, 0.9, 0.05    # FATIGUE only from P >= 0.8; moderate = normal
 
 
 def rec_features(path):
@@ -88,7 +88,7 @@ def pairs(rows):
 
 
 def level(p, alarm):
-    return 'FATIGUE' if p >= alarm else 'WATCH' if p >= WATCH else 'NORMAL'
+    return 'FATIGUE' if p >= alarm else 'NORMAL'      # alarm is calibrated so held-out normals stay NORMAL
 
 
 def train():
@@ -112,13 +112,14 @@ def train():
             continue
         p = float(np.mean([prob(m, np.array([shift(held['f'], b['f'])]))[0] for b in bases]))
         results.append((held, p))
+    # Priority: no false alarms. Threshold just above the highest held-out NORMAL score (never below 0.8).
     normal_ps = [p for r, p in results if r['condition'] == 'normal']
-    alarm = round(float(np.clip(max(normal_ps, default=WATCH) + MARGIN, MIN_ALARM, MAX_ALARM)), 3)
+    alarm = round(float(np.clip(max(normal_ps, default=0) + MARGIN, WATCH, MAX_ALARM)), 3)
     ok = 0
     for r, p in results:
         lv = level(p, alarm); good = (lv == 'FATIGUE') == (r['condition'] == 'fatigue'); ok += good
         print(f'  {r["file"]:34s} true {r["condition"]:7s} P(fatigue) {p:.2f}  -> {lv:7s} {"OK" if good else "WRONG"}')
-    print(f'  {ok}/{len(results)} correct (alarm at P >= {alarm}, watch from {WATCH})')
+    print(f'  {ok}/{len(results)} correct (fatigue at P >= {alarm})')
 
     m = fit_logreg(X, y)
     people = {}

@@ -287,7 +287,7 @@ def main(wesad_root, drozy_root):
     for nm, tr in (('Current model (ours only)', lambda X, y: fit_lr(X, y)),
                    ('Model B: WESAD -> DROZY -> ours', lambda X, y: fit_lr(X, y, prior=w_wd, lam=0.01))):
         res = []
-        for test_p in ('A', 'C'):
+        for test_p in ('A', 'B'):
             train_rows = [r for r in rows if r['person'] != test_p]
             m = tr(*our_pairs(train_rows))
             for held in (r for r in rows if r['person'] == test_p):

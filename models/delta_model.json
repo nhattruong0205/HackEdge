@@ -22,9 +22,9 @@
     -1.0129554262003457
   ],
   "intercept": -0.19196025570778485,
-  "threshold": 0.6,
+  "threshold": 0.5,
   "watch_threshold": 0.5,
-  "trained_at": "2026-11-18T23:05:57",
+  "trained_at": "2026-11-19T20:03:42",
   "training": {
     "recordings": 14,
     "people": 2,
@@ -35,9 +35,9 @@
   },
   "evaluation": {
     "comparisons": 21,
-    "correct": 19,
-    "accuracy": 0.9047619047619048,
-    "fatigue_caught": "11/13",
+    "correct": 21,
+    "accuracy": 1.0,
+    "fatigue_caught": "13/13",
     "normal_correct": "8/8",
     "false_alarms": 0,
     "fatigue_watch_or_alarm": "13/13",
@@ -47,14 +47,14 @@
         0
       ],
       [
-        2,
-        11
+        0,
+        13
       ]
     ],
     "details": [
       {
-        "new_recording": "data/normal/first_attempt.csv",
-        "baseline": "data/normal/second_attempt.csv",
+        "new_recording": "data/normal/A_first_attempt.csv",
+        "baseline": "data/normal/A_second_attempt.csv",
         "person": "A",
         "true": "normal",
         "p_fatigue": 0.101,
@@ -63,8 +63,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/normal/second_attempt.csv",
-        "baseline": "data/normal/first_attempt.csv",
+        "new_recording": "data/normal/A_second_attempt.csv",
+        "baseline": "data/normal/A_first_attempt.csv",
         "person": "A",
         "true": "normal",
         "p_fatigue": 0.133,
@@ -73,8 +73,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/first_attempt.csv",
-        "baseline": "data/normal/first_attempt.csv",
+        "new_recording": "data/fatigue/A_first_attempt.csv",
+        "baseline": "data/normal/A_first_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.974,
@@ -83,8 +83,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/first_attempt.csv",
-        "baseline": "data/normal/second_attempt.csv",
+        "new_recording": "data/fatigue/A_first_attempt.csv",
+        "baseline": "data/normal/A_second_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.969,
@@ -93,8 +93,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/second_attempt.csv",
-        "baseline": "data/normal/first_attempt.csv",
+        "new_recording": "data/fatigue/A_second_attempt.csv",
+        "baseline": "data/normal/A_first_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.989,
@@ -103,8 +103,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/second_attempt.csv",
-        "baseline": "data/normal/second_attempt.csv",
+        "new_recording": "data/fatigue/A_second_attempt.csv",
+        "baseline": "data/normal/A_second_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.987,
@@ -113,8 +113,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/third_attempt.csv",
-        "baseline": "data/normal/first_attempt.csv",
+        "new_recording": "data/fatigue/A_third_attempt.csv",
+        "baseline": "data/normal/A_first_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.977,
@@ -123,8 +123,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/third_attempt.csv",
-        "baseline": "data/normal/second_attempt.csv",
+        "new_recording": "data/fatigue/A_third_attempt.csv",
+        "baseline": "data/normal/A_second_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.973,
@@ -133,8 +133,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/fourth_attempt.csv",
-        "baseline": "data/normal/first_attempt.csv",
+        "new_recording": "data/fatigue/A_fourth_attempt.csv",
+        "baseline": "data/normal/A_first_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.961,
@@ -143,8 +143,8 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/fourth_attempt.csv",
-        "baseline": "data/normal/second_attempt.csv",
+        "new_recording": "data/fatigue/A_fourth_attempt.csv",
+        "baseline": "data/normal/A_second_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.955,
@@ -153,29 +153,29 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/fifth_attempt.csv",
-        "baseline": "data/normal/first_attempt.csv",
+        "new_recording": "data/fatigue/A_fifth_attempt.csv",
+        "baseline": "data/normal/A_first_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.594,
-        "predicted": "normal",
-        "level": "watch",
-        "correct": false
+        "predicted": "fatigue",
+        "level": "fatigue",
+        "correct": true
       },
       {
-        "new_recording": "data/fatigue/fifth_attempt.csv",
-        "baseline": "data/normal/second_attempt.csv",
+        "new_recording": "data/fatigue/A_fifth_attempt.csv",
+        "baseline": "data/normal/A_second_attempt.csv",
         "person": "A",
         "true": "fatigue",
         "p_fatigue": 0.57,
-        "predicted": "normal",
-        "level": "watch",
-        "correct": false
+        "predicted": "fatigue",
+        "level": "fatigue",
+        "correct": true
       },
       {
-        "new_recording": "data/normal/sixth_attempt.csv",
-        "baseline": "data/normal/seventh_attempt.csv",
-        "person": "C",
+        "new_recording": "data/normal/B_sixth_attempt.csv",
+        "baseline": "data/normal/B_seventh_attempt.csv",
+        "person": "B",
         "true": "normal",
         "p_fatigue": 0.252,
         "predicted": "normal",
@@ -183,9 +183,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/normal/sixth_attempt.csv",
-        "baseline": "data/normal/eighth_attempt.csv",
-        "person": "C",
+        "new_recording": "data/normal/B_sixth_attempt.csv",
+        "baseline": "data/normal/B_eighth_attempt.csv",
+        "person": "B",
         "true": "normal",
         "p_fatigue": 0.111,
         "predicted": "normal",
@@ -193,9 +193,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/normal/seventh_attempt.csv",
-        "baseline": "data/normal/sixth_attempt.csv",
-        "person": "C",
+        "new_recording": "data/normal/B_seventh_attempt.csv",
+        "baseline": "data/normal/B_sixth_attempt.csv",
+        "person": "B",
         "true": "normal",
         "p_fatigue": 0.053,
         "predicted": "normal",
@@ -203,9 +203,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/normal/seventh_attempt.csv",
-        "baseline": "data/normal/eighth_attempt.csv",
-        "person": "C",
+        "new_recording": "data/normal/B_seventh_attempt.csv",
+        "baseline": "data/normal/B_eighth_attempt.csv",
+        "person": "B",
         "true": "normal",
         "p_fatigue": 0.037,
         "predicted": "normal",
@@ -213,9 +213,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/normal/eighth_attempt.csv",
-        "baseline": "data/normal/sixth_attempt.csv",
-        "person": "C",
+        "new_recording": "data/normal/B_eighth_attempt.csv",
+        "baseline": "data/normal/B_sixth_attempt.csv",
+        "person": "B",
         "true": "normal",
         "p_fatigue": 0.191,
         "predicted": "normal",
@@ -223,9 +223,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/normal/eighth_attempt.csv",
-        "baseline": "data/normal/seventh_attempt.csv",
-        "person": "C",
+        "new_recording": "data/normal/B_eighth_attempt.csv",
+        "baseline": "data/normal/B_seventh_attempt.csv",
+        "person": "B",
         "true": "normal",
         "p_fatigue": 0.332,
         "predicted": "normal",
@@ -233,9 +233,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/sixth_attempt.csv",
-        "baseline": "data/normal/sixth_attempt.csv",
-        "person": "C",
+        "new_recording": "data/fatigue/B_sixth_attempt.csv",
+        "baseline": "data/normal/B_sixth_attempt.csv",
+        "person": "B",
         "true": "fatigue",
         "p_fatigue": 0.758,
         "predicted": "fatigue",
@@ -243,9 +243,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/sixth_attempt.csv",
-        "baseline": "data/normal/seventh_attempt.csv",
-        "person": "C",
+        "new_recording": "data/fatigue/B_sixth_attempt.csv",
+        "baseline": "data/normal/B_seventh_attempt.csv",
+        "person": "B",
         "true": "fatigue",
         "p_fatigue": 0.883,
         "predicted": "fatigue",
@@ -253,9 +253,9 @@
         "correct": true
       },
       {
-        "new_recording": "data/fatigue/sixth_attempt.csv",
-        "baseline": "data/normal/eighth_attempt.csv",
-        "person": "C",
+        "new_recording": "data/fatigue/B_sixth_attempt.csv",
+        "baseline": "data/normal/B_eighth_attempt.csv",
+        "person": "B",
         "true": "fatigue",
         "p_fatigue": 0.684,
         "predicted": "fatigue",
@@ -265,67 +265,67 @@
     ],
     "per_recording": [
       {
-        "new_recording": "data/fatigue/fifth_attempt.csv",
+        "new_recording": "data/fatigue/A_fifth_attempt.csv",
         "true": "fatigue",
         "p_fatigue": 0.582,
-        "level": "watch"
+        "level": "fatigue"
       },
       {
-        "new_recording": "data/fatigue/first_attempt.csv",
+        "new_recording": "data/fatigue/A_first_attempt.csv",
         "true": "fatigue",
         "p_fatigue": 0.972,
         "level": "fatigue"
       },
       {
-        "new_recording": "data/fatigue/fourth_attempt.csv",
+        "new_recording": "data/fatigue/A_fourth_attempt.csv",
         "true": "fatigue",
         "p_fatigue": 0.958,
         "level": "fatigue"
       },
       {
-        "new_recording": "data/fatigue/second_attempt.csv",
+        "new_recording": "data/fatigue/A_second_attempt.csv",
         "true": "fatigue",
         "p_fatigue": 0.988,
         "level": "fatigue"
       },
       {
-        "new_recording": "data/fatigue/sixth_attempt.csv",
-        "true": "fatigue",
-        "p_fatigue": 0.775,
-        "level": "fatigue"
-      },
-      {
-        "new_recording": "data/fatigue/third_attempt.csv",
+        "new_recording": "data/fatigue/A_third_attempt.csv",
         "true": "fatigue",
         "p_fatigue": 0.975,
         "level": "fatigue"
       },
       {
-        "new_recording": "data/normal/eighth_attempt.csv",
-        "true": "normal",
-        "p_fatigue": 0.262,
-        "level": "normal"
+        "new_recording": "data/fatigue/B_sixth_attempt.csv",
+        "true": "fatigue",
+        "p_fatigue": 0.775,
+        "level": "fatigue"
       },
       {
-        "new_recording": "data/normal/first_attempt.csv",
+        "new_recording": "data/normal/A_first_attempt.csv",
         "true": "normal",
         "p_fatigue": 0.101,
         "level": "normal"
       },
       {
-        "new_recording": "data/normal/second_attempt.csv",
+        "new_recording": "data/normal/A_second_attempt.csv",
         "true": "normal",
         "p_fatigue": 0.133,
         "level": "normal"
       },
       {
-        "new_recording": "data/normal/seventh_attempt.csv",
+        "new_recording": "data/normal/B_eighth_attempt.csv",
+        "true": "normal",
+        "p_fatigue": 0.262,
+        "level": "normal"
+      },
+      {
+        "new_recording": "data/normal/B_seventh_attempt.csv",
         "true": "normal",
         "p_fatigue": 0.045,
         "level": "normal"
       },
       {
-        "new_recording": "data/normal/sixth_attempt.csv",
+        "new_recording": "data/normal/B_sixth_attempt.csv",
         "true": "normal",
         "p_fatigue": 0.182,
         "level": "normal"

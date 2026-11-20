@@ -1,15 +1,16 @@
 file,person,condition,kss,notes
-data/normal/first_attempt.csv,A,normal,,rested baseline (HR ~65); long recording; optical working
-data/normal/second_attempt.csv,A,normal,,rested baseline (HR ~69)
-data/normal/third_attempt.csv,A,unrested,,labelled normal but HR ~105-109 and HRV as low as fatigue; excluded from training
-data/normal/fourth_attempt.csv,A,unrested,,labelled normal but HR ~105-109 and HRV as low as fatigue; excluded from training
-data/normal/fifth_attempt.csv,A,unrested,,labelled normal but HR ~105-109 and HRV as low as fatigue; excluded from training
-data/fatigue/first_attempt.csv,A,fatigue,,sick and tired
-data/fatigue/second_attempt.csv,A,fatigue,,sick and tired
-data/fatigue/third_attempt.csv,A,fatigue,,sick and tired
-data/fatigue/fourth_attempt.csv,A,fatigue,,sick and tired
-data/fatigue/fifth_attempt.csv,A,fatigue,,sick and tired
-data/normal/sixth_attempt.csv,C,normal,,rested baseline (HR ~70)
-data/normal/seventh_attempt.csv,C,normal,,rested baseline (HR ~69); long recording
-data/normal/eighth_attempt.csv,C,normal,,HR ~88; long recording
-data/fatigue/sixth_attempt.csv,C,fatigue,,HR falls 122 -> 98 during recording (possibly recovery after exertion)
+data/normal/A_first_attempt.csv,A,normal,,rested baseline (HR ~65); long recording; optical working
+data/normal/A_second_attempt.csv,A,normal,,rested baseline (HR ~69)
+data/normal/A_third_attempt.csv,A,unrested,,labelled normal but HR ~105-109 and HRV as low as fatigue; excluded from training
+data/normal/A_fourth_attempt.csv,A,unrested,,labelled normal but HR ~105-109 and HRV as low as fatigue; excluded from training
+data/normal/A_fifth_attempt.csv,A,unrested,,labelled normal but HR ~105-109 and HRV as low as fatigue; excluded from training
+data/fatigue/A_first_attempt.csv,A,fatigue,,sick and tired
+data/fatigue/A_second_attempt.csv,A,fatigue,,sick and tired
+data/fatigue/A_third_attempt.csv,A,fatigue,,sick and tired
+data/fatigue/A_fourth_attempt.csv,A,fatigue,,sick and tired
+data/fatigue/A_fifth_attempt.csv,A,fatigue,,sick and tired
+data/normal/B_sixth_attempt.csv,B,normal,,rested baseline (HR ~70)
+data/normal/B_seventh_attempt.csv,B,normal,,rested baseline (HR ~69); long recording
+data/normal/B_eighth_attempt.csv,B,normal,,HR ~88; long recording
+data/fatigue/B_sixth_attempt.csv,B,fatigue,,HR falls 122 -> 98 during recording (possibly recovery after exertion)
+data/contributed/Nhat/20261119_204123_normal.csv,Nhat,normal,,contributed via app; source A_first_attempt.csv; baseline

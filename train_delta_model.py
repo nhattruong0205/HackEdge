@@ -34,7 +34,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from fatigue_pipeline import MODEL_PATH, ROOT, SHIFT_FEATURES, analyze, load_recording, shift
+from fatigue_pipeline import ALERT_MIN, MODEL_PATH, ROOT, SHIFT_FEATURES, analyze, load_recording, shift
 
 FEATURES = SHIFT_FEATURES
 MANIFEST = ROOT / 'data_manifest.csv'
@@ -117,15 +117,16 @@ def evaluate(recs, halves):
 
 
 def calibrate_threshold(ev):
-    """Serious-fatigue threshold: just above the highest held-out score of a NORMAL recording,
-    so a normal session vs. the person's own baseline does not raise an alarm."""
+    """Priority: no false alarms. The FATIGUE threshold is set just above the highest held-out score of a
+    NORMAL recording (never below ALERT_MIN = 0.8, never above MAX_SERIOUS), so normal recordings compared with the
+    person's own baseline are not flagged, even if that means missing some milder fatigue."""
     normal_scores = ev.loc[ev.true == 'normal', 'p_fatigue'] if len(ev) else pd.Series(dtype=float)
-    top = float(normal_scores.max()) if len(normal_scores) else WATCH_THRESHOLD
-    return round(float(np.clip(top + MARGIN, MIN_SERIOUS, MAX_SERIOUS)), 3)
+    top = float(normal_scores.max()) if len(normal_scores) else 0.0
+    return round(float(np.clip(top + MARGIN, ALERT_MIN, MAX_SERIOUS)), 3)   # never below 0.8: moderate = normal
 
 
 def level(p, threshold):
-    return 'fatigue' if p >= threshold else 'watch' if p >= WATCH_THRESHOLD else 'normal'
+    return 'fatigue' if p >= threshold else 'normal'
 
 
 def train(manifest=MANIFEST, out=MODEL_PATH, verbose=True):
