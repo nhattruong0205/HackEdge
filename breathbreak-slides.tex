@@ -1,0 +1,500 @@
+\documentclass[aspectratio=169]{beamer}
+% BreathBreak pitch deck (9 slides), recreated in LaTeX from breathbreak-slides.pdf.
+% Every slide is drawn on a 1400 x 787 "pixel" grid (the 16 cm x 9 cm page), origin at the top-left.
+% Build without overwriting the existing PDF:
+%   latexmk -pdf -jobname=breathbreak-slides-tex breathbreak-slides.tex
+
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,decorations.pathreplacing,calc}
+
+\setbeamertemplate{navigation symbols}{}
+
+% ---------- colours ----------
+\definecolor{bbnavy}{HTML}{12294A}
+\definecolor{bbink}{HTML}{0B1A2E}
+\definecolor{bbteal}{HTML}{0E8A8F}
+\definecolor{bbteal2}{HTML}{12A5A5}
+\definecolor{bbcoral}{HTML}{F2685B}
+\definecolor{bbamber}{HTML}{F5B041}
+\definecolor{bbgold}{HTML}{E8A33C}
+\definecolor{bbgreen}{HTML}{3DD18F}
+\definecolor{bbolive}{HTML}{B5BF63}
+\definecolor{bbdkgreen}{HTML}{2A8A5C}
+\definecolor{bbpurple}{HTML}{7C5CFC}
+\definecolor{bblav}{HTML}{A78BFA}
+\definecolor{bbgrey}{HTML}{5B6573}
+\definecolor{bbline}{HTML}{9AA3AD}
+\definecolor{bblight}{HTML}{E6F4F4}
+\definecolor{bbtealbox}{HTML}{DDF1F1}
+\definecolor{bbpink}{HTML}{FDE8E6}
+\definecolor{bbmint}{HTML}{E3F6EF}
+\definecolor{bblilac}{HTML}{EFEAFE}
+\definecolor{bbcream}{HTML}{FDEBD0}
+\definecolor{bbpeach}{HTML}{FDEEDB}
+\definecolor{bbaqua}{HTML}{DCEFEF}
+\definecolor{bbtext}{HTML}{1A1A1A}
+
+% ---------- drawing helpers (coordinates in px of a 1400 x 787 slide) ----------
+\newcommand{\F}[2]{\fontsize{#1}{#2}\selectfont}
+\newenvironment{slide}{%
+  \begin{tikzpicture}[remember picture,overlay]
+  \begin{scope}[shift={(current page.north west)}, x=0.114286mm, y=-0.114286mm]}{%
+  \end{scope}\end{tikzpicture}}
+% text with its baseline at (x,y)
+\newcommand{\T}[4][west]{\node[anchor=base #1, inner sep=0pt, font=#3] at (#2) {#4};}
+\newcommand{\titlebar}[2][65]{%
+  \shade[left color=bbnavy, right color=bbteal2] (0,0) rectangle (1400,92);
+  \fill[bbamber] (0,92) rectangle (262,97);
+  \fill[bbcoral] (262,92) rectangle (436,97);
+  \T{#1,60}{\F{13.7}{16}\bfseries\color{white}}{#2}}
+\newcommand{\footer}[1]{%
+  \T[east]{1355,762}{\F{6.65}{8}\color{bbgrey}}{\textcolor{bbteal}{\bfseries BreathBreak} #1/9}}
+% card: x1,y1,x2,y2, left-bar colour, background
+\newcommand{\card}[6]{%
+  \fill[black!13, rounded corners=5pt] (#1+6,#2+6) rectangle (#3+6,#4+6);
+  \fill[#6, rounded corners=5pt] (#1,#2) rectangle (#3,#4);
+  \draw[black!9, line width=0.5pt, rounded corners=5pt] (#1,#2) rectangle (#3,#4);
+  \begin{scope}\clip[rounded corners=5pt] (#1,#2) rectangle (#3,#4); \fill[#5] (#1,#2) rectangle (#1+10,#4); \end{scope}}
+\newcommand{\pill}[6]{% x1,y1,x2,y2, fill, label (white bold)
+  \fill[#5, rounded corners=2.5pt] (#1,#2) rectangle (#3,#4);
+  \node[font=\F{4.75}{6}\bfseries\color{white}, inner sep=0pt] at ({(#1+#3)/2},{(#2+#4)/2}) {#6};}
+\newcommand{\garrow}[2]{\draw[-{Stealth[length=4pt]}, line width=1.3pt, bbline] (#1) -- (#2);}
+\newcommand{\numcircle}[3]{% x, y, colour (circled step number is drawn by the caller)
+  \draw[#3, line width=0.9pt] (#1,#2) circle (13);}
+
+\begin{document}
+
+% =====================================================================
+% 1. Title
+\begin{frame}[plain]
+\begin{slide}
+  \shade[top color=bbnavy, bottom color=bbteal] (0,0) rectangle (1400,787);
+  \fill[white, opacity=.07] (1180,335) circle (338);
+  \fill[white, opacity=.07] (1335,525) circle (245);
+  % ECG
+  \draw[color=bbgreen!85!teal, line width=1.6pt, line join=round]
+    (0,530) -- (172,530) -- (200,513) -- (218,530) -- (243,530) -- (257,557) -- (274,408) -- (291,575) -- (305,530)
+    -- (355,530) -- (383,498) -- (410,530) -- (540,530) -- (568,513) -- (586,530) -- (611,530) -- (625,557)
+    -- (642,408) -- (659,575) -- (673,530) -- (723,530) -- (751,498) -- (778,530) -- (1400,530);
+  % watch
+  \fill[bbink, rounded corners=6pt] (1073,136) rectangle (1169,557);
+  \fill[black, opacity=.25, rounded corners=12pt] (1020,246) rectangle (1240,466);
+  \fill[white, rounded corners=12pt] (1010,236) rectangle (1230,456);
+  \fill[bbnavy, rounded corners=9pt] (1025,252) rectangle (1215,441);
+  \node[font=\F{5}{6}\bfseries\color{white}] at (1120,285) {FATIGUE};
+  \draw[bbcoral, line width=1.1pt, line join=round] (1050,338) -- (1088,338) -- (1097,313) -- (1106,370) -- (1124,298) -- (1135,338) -- (1190,338);
+  \fill[bbamber, rounded corners=4pt] (1055,373) rectangle (1186,412);
+  \node[font=\F{5}{6}\bfseries\color{bbnavy}] at (1120,393) {Take a breath};
+  % text
+  \T{87,128}{\F{8.55}{10}\bfseries\color{bbamber}}{UTD HACKEDGE 2026 \,•\, EDGE AI TRACK}
+  \T{84,230}{\F{36.1}{38}\bfseries\color{white}}{BreathBreak}
+  \T{87,298}{\F{11.5}{13}\color{white!92!bbteal}}{An edge-powered wearable that detects}
+  \T{87,341}{\F{11.5}{13}\color{white!92!bbteal}}{worker fatigue in real time}
+  \T{87,693}{\F{7.6}{9}\bfseries\color{white}}{Nhat Truong \,·\, Dung Anh Nguyen \,·\, Anthony Tran}
+  \T{87,728}{\F{7.6}{9}\color{white!78!bbteal}}{November 11, 2026}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 2. Problem and motivation
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{Problem and motivation}
+  % the problem
+  \fill[bbpink, rounded corners=5pt] (72,186) rectangle (662,427);
+  \draw[bbcoral!25, rounded corners=5pt] (72,186) rectangle (662,427);
+  \T{105,238}{\F{11.45}{13}\bfseries\color{bbcoral}}{The problem}
+  \T{105,283}{\F{9.5}{11}\color{bbtext}}{Employees working \textbf{long shifts} often}
+  \T{105,321}{\F{9.5}{11}\color{bbtext}}{experience fatigue, which reduces}
+  \T{105,358}{\F{9.5}{11}\color{bbtext}}{alertness, harms their health, and raises}
+  \T{105,396}{\F{9.5}{11}\color{bbtext}}{the risk of \textbf{workplace accidents}.}
+  % alertness chart
+  \T[]{388,478}{\F{6.65}{8}\itshape\color{bbtext}}{Illustrative: alertness drifts down over a long shift}
+  \fill[bbgreen!20] (166,501) rectangle (607,568);
+  \fill[bbpink] (166,618) rectangle (607,679);
+  \T[east]{596,524}{\F{4.75}{5}\color{bbdkgreen}}{alert zone}
+  \T{188,664}{\F{4.75}{5}\color{bbcoral}}{risk zone}
+  \draw[black!80, line width=0.4pt, -{Stealth[length=3pt]}] (166,679) -- (166,500);
+  \draw[black!80, line width=0.4pt, -{Stealth[length=3pt]}] (166,679) -- (610,679);
+  \foreach \y in {568,623} \draw[black!80, line width=0.4pt] (160,\y) -- (166,\y);
+  \foreach \x/\l in {166/0,313/4,460/8,607/12} {\draw[black!80, line width=0.4pt] (\x,679) -- (\x,685); \T[]{\x,705}{\F{4.75}{5}\color{bbtext}}{\l}}
+  \T[]{386,736}{\F{4.75}{5}\color{bbtext}}{Hours into shift}
+  \node[rotate=90, font=\F{4.75}{5}\color{bbtext}] at (125,590) {Alertness};
+  \draw[bbteal2, line width=1.6pt] plot[smooth, tension=0.6] coordinates
+    {(166,513) (200,511) (240,527) (300,557) (360,567) (400,590) (440,628) (480,650) (530,664) (568,679)};
+  % why it matters
+  \T{737,179}{\F{11.4}{14}\bfseries\color{bbnavy}}{Why it matters}
+  \card{737}{227}{1327}{428}{bbamber}{white}
+  \fill[bbamber] (790,248) -- (775,275) -- (786,275) -- (780,293) -- (797,264) -- (786,264) -- cycle;
+  \T{813,281}{\F{9.5}{12}\bfseries\color{bbamber}}{Productivity}
+  \T{773,327}{\F{9.5}{11}\color{bbtext}}{Timely breathing breaks help workers}
+  \T{773,364}{\F{9.5}{11}\color{bbtext}}{regain focus, maintain performance, and}
+  \T{773,401}{\F{9.5}{11}\color{bbtext}}{work more efficiently.}
+  \card{737}{478}{1327}{673}{bbdkgreen}{white}
+  \fill[bbdkgreen] (793,499) -- (814,506) -- (814,522) .. controls (814,535) and (804,542) .. (793,547)
+                   .. controls (782,542) and (772,535) .. (772,522) -- (772,506) -- cycle;
+  \draw[white, line width=1.4pt] (783,522) -- (791,530) -- (804,514);
+  \T{829,533}{\F{9.5}{12}\bfseries\color{bbdkgreen}}{Safety}
+  \T{773,578}{\F{9.5}{11}\color{bbtext}}{Early fatigue detection helps prevent}
+  \T{773,615}{\F{9.5}{11}\color{bbtext}}{workplace injuries and reduces costly}
+  \T{773,651}{\F{9.5}{11}\color{bbtext}}{accidents.}
+  \footer{2}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 3. Concept
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{BreathBreak: real-time fatigue detection at the edge}
+  \fill[bblight, rounded corners=7pt] (85,172) rectangle (1313,308);
+  \fill[bbcoral] (150,240) .. controls (138,230) and (132,222) .. (132,216) .. controls (132,206) and (146,203) .. (150,212)
+                 .. controls (154,203) and (168,206) .. (168,216) .. controls (168,222) and (162,230) .. (150,240) -- cycle;
+  \T{205,236}{\F{9.5}{11}\color{bbtext}}{A \textbf{non-invasive wearable} that monitors workers and detects signs of fatigue}
+  \T{122,275}{\F{9.5}{11}\color{bbtext}}{during long shifts.}
+  % card 1
+  \card{72}{367}{662}{690}{bbcoral}{white}
+  \numcircle{122}{401}{bbcoral}\node[font=\F{6.5}{7}\color{bbcoral}] at (122,401) {1};
+  \T{158,414}{\F{11.4}{14}\bfseries\color{bbcoral}}{Real-time fatigue alerts}
+  \T{108,453}{\F{7.6}{9}\color{bbtext}}{Detects rising fatigue and prompts the worker to}
+  \T{108,482}{\F{7.6}{9}\color{bbtext}}{take a short breathing break.}
+  \fill[bbnavy, rounded corners=7pt] (195,508) rectangle (335,702);
+  \fill[white, rounded corners=5pt] (207,525) rectangle (322,685);
+  \fill[bbcoral, rounded corners=3pt] (213,535) rectangle (318,596);
+  \node[font=\F{4.75}{6}\bfseries\color{white}, align=center] at (265,566) {Fatigue rising\\Breathe 2 min};
+  \draw[bbteal2, line width=0.9pt] (218,640) -- (245,640) -- (253,617) -- (260,665) -- (270,628) -- (280,640) -- (313,640);
+  \draw[-{Stealth[length=5pt]}, bbcoral, line width=1.5pt] (360,605) -- (424,605);
+  \draw[bbteal2!35, line width=1.4pt] (485,603) circle (58);
+  \draw[bbteal2!70, line width=1.4pt] (485,603) circle (41);
+  \draw[bbteal2, line width=1.4pt] (485,603) circle (23);
+  \T[]{485,689}{\F{4.75}{6}\bfseries\color{bbteal2}}{breathing break}
+  % card 2
+  \card{737}{367}{1327}{690}{bbpurple}{white}
+  \numcircle{787}{401}{bbpurple}\node[font=\F{6.5}{7}\color{bbpurple}] at (787,401) {2};
+  \T{823,414}{\F{11.4}{14}\bfseries\color{bbpurple}}{Workload reports for HR}
+  \T{773,453}{\F{7.6}{9}\color{bbtext}}{Weekly and monthly fatigue trends help HR}
+  \T{773,482}{\F{7.6}{9}\color{bbtext}}{balance workload and shift schedules.}
+  \T[]{1075,513}{\F{4.75}{5}\itshape\color{bbtext}}{Example report (mock data)}
+  \draw[black, line width=0.4pt, -{Stealth[length=3pt]}] (897,643) -- (897,522);
+  \draw[black, line width=0.4pt, -{Stealth[length=3pt]}] (897,643) -- (1254,643);
+  \foreach \y/\l in {643/0,586/50,528/100} {\draw[black, line width=0.4pt] (891,\y) -- (897,\y); \T[east]{884,\y+5}{\F{4.75}{5}}{\l}}
+  \node[rotate=90, font=\F{4.75}{5}] at (835,585) {\% shifts fatigued};
+  \foreach \x/\h/\d in {932/618/Mon,989/611/Tue,1046/603/Wed,1103/596/Thu,1160/571/Fri,1217/588/Sat} {
+    \fill[bblav] (\x-11,\h) rectangle (\x+11,643); \T[]{\x,669}{\F{4.75}{5}}{\d}}
+  \T[]{699,724}{\F{7.6}{9}\color{bbnavy}}{\textbf{Goal:} higher productivity \textcolor{bbamber}{•} safer workplaces \textcolor{bbcoral}{•} healthier employees}
+  \footer{3}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 4. Technology
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{Technology behind BreathBreak}
+  % AFE4950
+  \fill[black!10, rounded corners=8pt] (148,180) rectangle (459,368);
+  \fill[bbpink, rounded corners=8pt] (142,174) rectangle (453,362);
+  \draw[bbcoral, line width=1.3pt, rounded corners=8pt] (142,174) rectangle (453,362);
+  \node[font=\F{6.7}{8}\bfseries\color{bbcoral}] at (297,198) {TI AFE4950};
+  \T{167,233}{\F{4.75}{6}\color{bbcoral}}{ECG}
+  \draw[bbcoral, line width=0.8pt, line join=round] (170,265)
+    \foreach \x in {197,258,322,385} { -- (\x-8,265) -- (\x-4,261) -- (\x,235) -- (\x+3,272) -- (\x+6,265) -- (\x+14,265) -- (\x+19,259) -- (\x+24,265) }
+    -- (425,265);
+  \T{167,291}{\F{4.75}{6}\color{bbpurple}}{PPG}
+  \draw[bbpurple, line width=0.9pt] (170,320) .. controls (182,320) and (186,280) .. (195,282) .. controls (203,284) and (204,312) .. (212,306)
+    .. controls (220,300) and (222,320) .. (240,320) .. controls (250,320) and (252,292) .. (258,292) .. controls (265,292) and (266,312) .. (273,308)
+    .. controls (280,304) and (284,320) .. (303,320) .. controls (313,320) and (316,292) .. (322,292) .. controls (329,292) and (330,312) .. (337,308)
+    .. controls (344,304) and (348,320) .. (366,320) .. controls (376,320) and (379,292) .. (385,292) .. controls (392,292) and (393,312) .. (400,308)
+    .. controls (407,304) and (411,322) .. (425,320);
+  \node[font=\F{4.75}{6}\color{bbgrey}] at (297,347) {synchronized acquisition};
+  \draw[-{Stealth[length=6pt]}, bbcoral, line width=2pt] (453,268) -- (545,268);
+  % SK-AM62
+  \fill[black!10, rounded corners=8pt] (553,180) rectangle (864,368);
+  \fill[bbtealbox, rounded corners=8pt] (547,174) rectangle (858,362);
+  \draw[bbteal2, line width=1.3pt, rounded corners=8pt] (547,174) rectangle (858,362);
+  \node[font=\F{6.7}{8}\bfseries\color{bbteal2}] at (702,196) {TI SK-AM62 (edge)};
+  \node[font=\F{4.75}{6}\color{bbnavy}, align=center] at (702,252) {compare to personal\\baseline};
+  \draw[bbteal2, line width=0.8pt] (600,288) -- (803,288);
+  \shade[left color=bbgreen, right color=bbcoral] (614,303) rectangle (791,317);
+  \fill[bbink] (745,297) rectangle (749,323);
+  \node[font=\F{4.75}{6}\color{bbnavy}] at (702,340) {on-device fatigue score};
+  \draw[-{Stealth[length=6pt]}, bbteal2, line width=2pt] (858,268) -- (950,268);
+  % outputs
+  \fill[black!10, rounded corners=8pt] (958,180) rectangle (1269,368);
+  \fill[bblilac, rounded corners=8pt] (952,174) rectangle (1263,362);
+  \draw[bbpurple, line width=1.3pt, rounded corners=8pt] (952,174) rectangle (1263,362);
+  \node[font=\F{6.7}{8}\bfseries\color{bbpurple}] at (1107,196) {Outputs};
+  \fill[bbcoral, rounded corners=2.5pt] (1031,233) rectangle (1185,261);
+  \node[font=\F{4.75}{6}\color{white}] at (1108,247) {Break alert to worker};
+  \fill[bbpurple, rounded corners=2.5pt] (1038,285) rectangle (1178,315);
+  \node[font=\F{4.75}{6}\color{white}] at (1108,300) {Trend report to HR};
+  % one shift
+  \T[east]{240,445}{\F{6.7}{8}\bfseries\color{bbnavy}}{One shift}
+  \fill[bbamber, rounded corners=3pt] (261,418) rectangle (387,460);
+  \node[font=\F{4.75}{6}\bfseries\color{white}] at (324,439) {2-min baseline};
+  \foreach \c [count=\i from 0] in {bbgreen,bbgreen,bbgreen,bbgreen,bbgreen,bbgreen,bbolive,bbgreen,bbcoral,bbcoral,bbgreen,bbgreen,bbcoral}
+    \fill[\c] (391+\i*63.5,418) rectangle (447+\i*63.5,460);
+  \node[font=\F{6}{6}\color{bbline}] at (1235,439) {$\cdot\ \cdot\ \cdot$};
+  \draw[decorate, decoration={brace, amplitude=4pt, mirror}, bbline, line width=0.5pt] (391,466) -- (447,466);
+  \node[font=\F{4.75}{6}\color{bbgrey}] at (419,494) {60-s window};
+  \fill[bbgreen] (641,504) rectangle (660,523); \T{674,518}{\F{4.75}{6}\color{bbnavy}}{alert}
+  \fill[bbcoral] (768,504) rectangle (787,523); \T{800,518}{\F{4.75}{6}\color{bbnavy}}{fatigued $\Rightarrow$ breathing break}
+  % task / data
+  \fill[bblight, rounded corners=4pt] (133,567) rectangle (1263,690);
+  \T{175,607}{\F{6.46}{8}\color{bbnavy}}{\textcolor{bbteal2}{\textbf{Task:}} classify each 60-s window as \emph{alert} or \emph{fatigued} by comparing it with the person's own 2-min baseline; alert only on}
+  \T{175,634}{\F{6.46}{8}\color{bbnavy}}{\emph{serious, sustained} fatigue.}
+  \T{175,661}{\F{6.46}{8}\color{bbnavy}}{\textcolor{bbteal2}{\textbf{Data:}} \textbf{our own AFE4950 recordings} (Model A), plus public \textbf{WESAD} (stress) and \textbf{DROZY} (sleep deprivation) for Model B.}
+  \footer{4}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 5. Fatigue models
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{Fatigue models}
+  % Model A
+  \card{82}{190}{657}{408}{bbteal2}{white}
+  \T{122,230}{\F{9.6}{12}\bfseries\color{bbteal2}}{Model A}
+  \T{257,227}{\F{7.15}{9}\color{bbline}}{our recordings}
+  \pill{135}{260}{268}{292}{bbteal2}{Our ECG + PPG}
+  \garrow{270,276}{308,276}
+  \fill[bbtealbox, rounded corners=2.5pt] (311,260) rectangle (451,292);
+  \node[font=\F{4.75}{6}\bfseries\color{bbteal2}] at (381,276) {$\triangle$ from baseline};
+  \garrow{453,276}{503,276}
+  \pill{505}{260}{616}{292}{bbnavy}{Logistic reg.}
+  \pill{138}{330}{215}{358}{bbgold}{baseline}
+  \draw[-{Stealth[length=4pt]}, bbteal2, line width=0.8pt] (176,329) .. controls (230,300) and (300,300) .. (346,326);
+  \node[font=\F{4.5}{5}\color{bbteal2}] at (275,302) {compare};
+  \foreach \x/\c in {239/bbgreen,276/bbgreen,313/bbgreen,350/bbgreen,388/bbcoral,425/bbcoral,462/bbcoral}
+    \fill[\c, rounded corners=1.5pt] (\x,331) rectangle (\x+30,358);
+  \node[anchor=north west, font=\F{4.95}{6.1}\color{bbline}, align=left, inner sep=0pt] at (512,320) {normal /\\fatigued\\(KSS $\geq$ 7)};
+  \node[font=\F{4.6}{6}\color{bbline}] at (346,384) {Many people $\times$ many sessions, recorded on BreathBreak's own sensor};
+  % Model B
+  \card{745}{190}{1321}{408}{bbpurple}{white}
+  \T{785,230}{\F{9.6}{12}\bfseries\color{bbpurple}}{Model B}
+  \T{920,227}{\F{7.15}{9}\color{bbline}}{transfer learning}
+  \pill{808}{260}{919}{292}{bbcoral}{WESAD}
+  \garrow{921,276}{958,276}
+  \pill{960}{260}{1071}{292}{bbpurple}{Pretrain}
+  \pill{808}{328}{919}{360}{bbgold}{DROZY}
+  \garrow{921,344}{958,344}
+  \pill{960}{328}{1071}{360}{bbnavy}{Fine-tune}
+  \garrow{1015,293}{1015,326}
+  \foreach \ya in {270,307,344} \foreach \yb in {270,307,344} {
+    \draw[black!12, line width=0.4pt] (1152,\ya) -- (1201,\yb); \draw[black!12, line width=0.4pt] (1201,\ya) -- (1250,\yb);}
+  \foreach \y in {270,307,344} {\fill[bbpurple] (1152,\y) circle (6); \fill[bbpurple] (1201,\y) circle (6); \fill[bbnavy] (1250,\y) circle (6);}
+  \node[font=\F{4.6}{6}\color{bbpurple}] at (1177,373) {frozen};
+  \node[font=\F{4.6}{6}\color{bbnavy}] at (1250,373) {tuned};
+  % pros / cons
+  \fill[bbmint, rounded corners=4pt] (82,437) rectangle (656,510);
+  \T{110,467}{\F{5.8}{7}\color{bbtext}}{\textcolor{bbdkgreen}{\textbf{Pro:}} same sensor and same task as BreathBreak.}
+  \T{110,491}{\F{5.8}{7}\color{bbtext}}{\textcolor{bbdkgreen}{\textbf{Con:}} small dataset (we record it ourselves).}
+  \fill[bbpink, rounded corners=4pt] (745,437) rectangle (1319,510);
+  \T{773,467}{\F{5.8}{7}\color{bbtext}}{\textcolor{bbcoral}{\textbf{Pro:}} much more data to borrow from.}
+  \T{773,491}{\F{5.8}{7}\color{bbtext}}{\textcolor{bbcoral}{\textbf{Con:}} stress $\neq$ fatigue, and public sensors differ from ours.}
+  % evaluation
+  \fill[bbtealbox, rounded corners=3pt] (310,557) rectangle (414,596);
+  \node[font=\F{5.7}{7}\bfseries\color{bbteal2}] at (362,577) {Model A};
+  \fill[bblilac, rounded corners=3pt] (310,619) rectangle (414,658);
+  \node[font=\F{5.7}{7}\bfseries\color{bbpurple}] at (362,639) {Model B};
+  \garrow{416,578}{460,604}
+  \garrow{416,638}{460,610}
+  \fill[bbcream, rounded corners=3pt] (462,570) rectangle (683,643);
+  \node[font=\F{5.7}{7}\bfseries\color{bbnavy}] at (572,597) {Test on unseen people};
+  \node[font=\F{4.8}{6}\color{bbnavy}] at (572,617) {from our recordings};
+  \draw[-{Stealth[length=5pt]}, bbteal2, line width=1.3pt] (685,607) -- (775,607);
+  \fill[bbnavy, rounded corners=3pt] (778,581) rectangle (1121,633);
+  \fill[bbcoral] (793,596) -- (809,596) -- (809,606) .. controls (809,613) and (804,617) .. (801,619)
+                 .. controls (798,617) and (793,613) .. (793,606) -- cycle;
+  \node[anchor=west, inner sep=0pt, font=\F{6.4}{8}\bfseries\color{white}] at (828,608) {Best one runs on BreathBreak};
+  \node[font=\F{4.6}{6}\color{bbline}] at (949,651) {alerts only on serious fatigue: 3 fatigued windows in a row};
+  \footer{5}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 6. Model A vs. Model B: results
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{Model A vs.\ Model B: results}
+  \T{82,150}{\F{8}{9}\bfseries\color{bbnavy}}{Leave-one-out on our 11 recordings}
+  \T{82,176}{\F{6}{7}\color{bbgrey}}{Brier score: error of the predicted probability (lower is better) \,·\, label = recordings correct}
+  \foreach \lab/\b/\n/\c [count=\i from 0] in {
+      NN 3-8-1: WESAD $\rightarrow$ DROZY $\rightarrow$ ours/0.017/11/bbteal2,
+      NN 3-8-1: ours only/0.020/11/bbteal2,
+      \textbf{Model A: ours (logistic regression)}/0.025/11/bbnavy,
+      WESAD $\rightarrow$ ours/0.028/11/bbteal2,
+      \textbf{Model B: WESAD $\rightarrow$ DROZY $\rightarrow$ ours}/0.035/10/bbpurple,
+      Zero-shot: WESAD/0.101/10/bbcoral,
+      Zero-shot: WESAD $\rightarrow$ DROZY/0.147/9/bbcoral,
+      Zero-shot: DROZY/0.159/9/bbcoral} {
+    \pgfmathsetmacro{\yy}{222+\i*48}
+    \T[east]{470,\yy+6}{\F{6.2}{7}\color{bbtext}}{\lab}
+    \fill[\c, rounded corners=2pt] (485,\yy-15) rectangle ({485+2500*\b},\yy+15);
+    \T{{493+2500*\b},\yy+6}{\F{6}{7}\bfseries\color{bbnavy}}{\n/11 · \b}}
+  \draw[bbline, line width=0.5pt] (485,195) -- (485,580);
+  \fill[bbteal2] (92,610) rectangle (110,626); \T{118,623}{\F{5.6}{6}\color{bbgrey}}{all 11 correct}
+  \fill[bbcoral] (240,610) rectangle (258,626); \T{266,623}{\F{5.6}{6}\color{bbgrey}}{at least one mistake}
+  % model cards
+  \card{1000}{135}{1340}{345}{bbnavy}{white}
+  \T{1032,180}{\F{9}{10}\bfseries\color{bbnavy}}{Model A \textcolor{bbteal2}{(deployed)}}
+  \T{1032,218}{\F{7}{8}\color{bbtext}}{\textbf{11/11} correct, Brier \textbf{0.025}}
+  \T{1032,250}{\F{7}{8}\color{bbtext}}{4 parameters, trains on the}
+  \T{1032,278}{\F{7}{8}\color{bbtext}}{SK-AM62 board in about 10 s}
+  \T{1032,310}{\F{7}{8}\color{bbtext}}{Weights match physiology}
+  \card{1000}{372}{1340}{582}{bbpurple}{white}
+  \T{1032,417}{\F{9}{10}\bfseries\color{bbpurple}}{Model B}
+  \T{1032,455}{\F{7}{8}\color{bbtext}}{\textbf{10/11} correct, Brier \textbf{0.035}}
+  \T{1032,487}{\F{7}{8}\color{bbtext}}{Flagged a rested recording}
+  \T{1032,515}{\F{7}{8}\color{bbtext}}{WESAD (stress): leans on HR}
+  \T{1032,543}{\F{7}{8}\color{bbtext}}{DROZY (sleep): HRV flat}
+  % verdict
+  \fill[bblight, rounded corners=5pt] (82,650) rectangle (1340,722);
+  \T{108,680}{\F{7.2}{8}\color{bbtext}}{\textcolor{bbteal2}{\textbf{Verdict:}} transfer learning did not beat the simple model on our data, so \textbf{Model A runs on BreathBreak}.}
+  \T{108,707}{\F{7.2}{8}\color{bbtext}}{With more of our own recordings and a source dataset closer to work fatigue, Model B could overtake it.}
+  \footer{6}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 7. Accuracy and alert threshold
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{Accuracy and alert threshold}
+  \T{82,150}{\F{8}{9}\bfseries\color{bbnavy}}{Each recording, scored while hidden from training}
+  \T{82,176}{\F{6}{7}\color{bbgrey}}{Leave-one-out P(fatigue), Model A}
+  \foreach \lab/\p/\c [count=\i from 0] in {A rest 1/0.06/bbteal2, A rest 2/0.09/bbteal2, B rest 6/0.14/bbteal2,
+      B rest 7/0.02/bbteal2, B rest 8/0.25/bbteal2, A fatigue 1/0.99/bbcoral, A fatigue 2/1.00/bbcoral,
+      A fatigue 3/0.99/bbcoral, A fatigue 4/0.98/bbcoral, A fatigue 5/0.62/bbcoral, B fatigue 6/0.83/bbcoral} {
+    \pgfmathsetmacro{\yy}{214+\i*40}
+    \T[east]{215,\yy+5}{\F{6}{7}\color{bbtext}}{\lab}
+    \fill[\c, rounded corners=2pt] (228,\yy-13) rectangle ({228+520*\p},\yy+13);
+    \T{{235+520*\p},\yy+5}{\F{5.8}{7}\bfseries\color{bbnavy}}{\p}}
+  \draw[bbline, line width=0.5pt] (228,190) -- (228,640);
+  \draw[bbnavy, dashed, line width=0.8pt] (488,190) -- (488,640);
+  \T[]{488,662}{\F{5.6}{6}\color{bbnavy}}{0.5}
+  \draw[bbcoral, line width=1.2pt] (644,190) -- (644,640);
+  \T[]{644,662}{\F{5.6}{6}\bfseries\color{bbcoral}}{0.8 (alert)}
+  % threshold table
+  \T{830,150}{\F{8}{9}\bfseries\color{bbnavy}}{Choosing the threshold}
+  \fill[bbnavy, rounded corners=3pt] (830,172) rectangle (1340,214);
+  \foreach \x/\t in {846/Alert when, 985/Accuracy, 1108/False alarms, 1250/Missed}
+    \T{\x,199}{\F{6}{7}\bfseries\color{white}}{\t}
+  \T{846,248}{\F{6.2}{8}\color{bbtext}}{P $\geq$ 0.5}
+  \T{985,248}{\F{6.2}{8}\color{bbtext}}{11/11 (100\%)}
+  \T{1108,248}{\F{6.2}{8}\color{bbtext}}{0 of 5}
+  \T{1250,248}{\F{6.2}{8}\color{bbtext}}{0 of 6}
+  \fill[bblight] (830,264) rectangle (1340,306);
+  \T{846,291}{\F{6.2}{8}\bfseries\color{bbtext}}{P $\geq$ 0.8 \textcolor{bbteal2}{(used)}}
+  \T{985,291}{\F{6.2}{8}\bfseries\color{bbtext}}{10/11 (91\%)}
+  \T{1108,291}{\F{6.2}{8}\bfseries\color{bbteal2}}{0 of 5}
+  \T{1250,291}{\F{6.2}{8}\color{bbtext}}{1 of 6}
+  \T{846,330}{\F{5.6}{6}\color{bbgrey}}{The one missed: A fatigue 5, the mildest session (P = 0.62).}
+  % big numbers
+  \T[]{955,420}{\F{24}{26}\bfseries\color{bbteal2}}{0}
+  \T[]{955,452}{\F{6.2}{7}\color{bbgrey}}{false alarms on}
+  \T[]{955,476}{\F{6.2}{7}\color{bbgrey}}{rested recordings}
+  \T[]{1210,420}{\F{24}{26}\bfseries\color{bbnavy}}{0.26}
+  \T[]{1210,452}{\F{6.2}{7}\color{bbgrey}}{highest rested score,}
+  \T[]{1210,476}{\F{6.2}{7}\color{bbgrey}}{far below the 0.8 alert}
+  % why + caveats
+  \card{830}{512}{1340}{722}{bbamber}{white}
+  \T{860,550}{\F{7.4}{8}\bfseries\color{bbgold}}{Why 0.8: no crying wolf}
+  \T{860,580}{\F{6.2}{7}\color{bbtext}}{A false alarm teaches workers to ignore alerts,}
+  \T{860,604}{\F{6.2}{7}\color{bbtext}}{so we accept missing the mildest fatigue.}
+  \T{860,640}{\F{6.2}{7}\color{bbtext}}{\textbf{Caveats:} 0 of 6 rested only bounds false alarms}
+  \T{860,664}{\F{6.2}{7}\color{bbtext}}{below about 40--50\,\%. Counting 3 sessions recorded}
+  \T{860,688}{\F{6.2}{7}\color{bbtext}}{while sick as normal: \textbf{8/14 (57\,\%)}.}
+  \footer{7}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 8. What kind of fatigue can we detect?
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar[45]{\F{12.8}{15}What kind of fatigue can we detect?}
+  % left card: work fatigue
+  \card{50}{137}{680}{490}{bbteal}{white}
+  \T{86,187}{\F{9.4}{11}\bfseries\color{bbteal}}{\checkmark\ Tired from work: clearly different}
+  \T{86,216}{\F{6.8}{8}\color{bbgrey}}{Subject B, healthy baseline vs. fatigue after work or exertion}
+  \foreach \y in {249,284} \fill[black!5, rounded corners=5pt] (318,\y-12) rectangle (654,\y+12);
+  \T{86,256}{\F{6.8}{8}\color{bbgrey}}{Healthy baseline}
+  \fill[bbteal, rounded corners=5pt] (360,237) rectangle (437,261);   \T{447,255}{\F{6}{7}\bfseries\color{bbnavy}}{69–88 bpm}
+  \T{86,291}{\F{6.8}{8}\color{bbgrey}}{Tired from work}
+  \fill[bbcoral, rounded corners=5pt] (430,272) rectangle (535,296);  \T{544,290}{\F{6}{7}\bfseries\color{bbnavy}}{87–106 bpm}
+  \T[]{327,319}{\F{5.3}{6}\color{bbline}}{60}\T[]{415,319}{\F{5.3}{6}\color{bbline}}{80}
+  \T[]{508,319}{\F{5.3}{6}\color{bbline}}{100}\T[east]{654,319}{\F{5.3}{6}\color{bbline}}{120 bpm}
+  \T{86,361}{\F{7.3}{9}\color{bbtext}}{HR up, HRV (RMSSD) down \textbf{50–75\,\%}: a big shift.}
+  \T{86,391}{\F{7.3}{9}\color{bbtext}}{Fatigue scores \textbf{0.71–0.84} vs. rest \textbf{$\leq$ 0.26}; \textbf{no false}}
+  \T{86,424}{\F{7.3}{9}\color{bbtext}}{\textbf{alarms}, alerts from P $\geq$ 0.8.}
+  % right card: illness
+  \card{716}{137}{1347}{490}{bbcoral}{bbcoral!5}
+  \T{753,187}{\F{9.4}{11}\bfseries\color{bbcoral}}{! Sick + tired $\approx$ sick alone}
+  \T{753,216}{\F{6.8}{8}\color{bbgrey}}{Subject A, sick "normal" vs. sick and tired}
+  \foreach \y in {249,284,319} \fill[black!5, rounded corners=5pt] (986,\y-12) rectangle (1320,\y+12);
+  \T{753,256}{\F{6.8}{8}\color{bbgrey}}{Healthy rest}
+  \fill[bbteal, rounded corners=5pt] (1006,237) rectangle (1043,261);  \T{1053,255}{\F{6}{7}\bfseries\color{bbnavy}}{65–69}
+  \T{753,291}{\F{6.8}{8}\color{bbgrey}}{Sick "normal"}
+  \fill[bbamber, rounded corners=5pt] (1174,272) rectangle (1222,296); \T{1231,290}{\F{6}{7}\bfseries\color{bbnavy}}{105–109}
+  \T{753,326}{\F{6.8}{8}\color{bbgrey}}{Sick + tired}
+  \fill[bbcoral, rounded corners=5pt] (1130,307) rectangle (1208,331); \T{1217,325}{\F{6}{7}\bfseries\color{bbnavy}}{94–108 bpm}
+  \T[]{995,354}{\F{5.3}{6}\color{bbline}}{60}\T[]{1083,354}{\F{5.3}{6}\color{bbline}}{80}
+  \T[]{1175,354}{\F{5.3}{6}\color{bbline}}{100}\T[east]{1321,354}{\F{5.3}{6}\color{bbline}}{120 bpm}
+  \T{753,396}{\F{7.3}{9}\color{bbtext}}{Illness alone already raises HR and lowers HRV. Sick}
+  \T{753,426}{\F{7.3}{9}\color{bbtext}}{"normal" vs. sick + tired: HR \textbf{105 vs 100}, RMSSD \textbf{8 vs}}
+  \T{753,459}{\F{7.3}{9}\color{bbtext}}{\textbf{12 ms}, \textbf{almost identical}.}
+  % takeaway
+  \fill[bblight, rounded corners=6pt] (48,525) rectangle (1349,666);
+  \T{76,568}{\F{7.55}{9}\color{bbtext}}{\textcolor{bbteal}{\textbf{Takeaway:}} Fatigue from work shows up \textbf{clearly} against a healthy baseline. When someone is sick, the illness already}
+  \T{76,603}{\F{7.55}{9}\color{bbtext}}{looks like fatigue, so being tired on top of it barely changes HR and HRV. \textbf{Record the baseline when healthy}; next, add}
+  \T{76,638}{\F{7.55}{9}\color{bbtext}}{breathing and PPG to separate illness from work fatigue.}
+  \footer{8}
+\end{slide}
+\end{frame}
+
+% =====================================================================
+% 9. Scalability
+\begin{frame}[plain]
+\begin{slide}
+  \titlebar{Scalability}
+  \fill[bblight, rounded corners=7pt] (85,182) rectangle (1313,307);
+  \T{122,235}{\F{9.5}{11}\color{bbtext}}{BreathBreak \textbf{doesn't change regular hours}. It offers short breaks \textbf{only when body}}
+  \T{122,273}{\F{9.5}{11}\color{bbtext}}{\textbf{signals show they're needed}.}
+  \T[]{699,351}{\F{7.6}{9}\color{bbnavy}}{Productivity and safety matter in long-shift work across industries:}
+  % nurses
+  \fill[bbpink] (225,461) circle (83);
+  \fill[bbcoral] (213,418) rectangle (238,505);
+  \fill[bbcoral] (181,449) rectangle (269,474);
+  \T[]{225,582}{\F{6.55}{8}\bfseries\color{bbcoral}}{Nurses}
+  % truck drivers
+  \fill[bbpeach] (541,461) circle (83);
+  \fill[bbgold, rounded corners=1.5pt] (487,431) rectangle (560,483);
+  \fill[bbgold!75!black!80, rounded corners=2pt] (563,447) rectangle (596,483);
+  \fill[white] (572,451) rectangle (591,462);
+  \fill[bbnavy] (506,488) circle (11); \fill[bbnavy] (578,488) circle (11);
+  \T[]{541,582}{\F{6.55}{8}\bfseries\color{bbgold!90!black}}{Truck drivers}
+  % factory workers
+  \fill[bbaqua] (857,461) circle (83);
+  \fill[bbteal2] (805,497) -- (805,457) -- (832,440) -- (832,457) -- (858,440) -- (858,457) -- (884,440) -- (884,497) -- cycle;
+  \fill[bbteal2] (889,413) rectangle (906,497);
+  \fill[black!20] (897,401) circle (7); \fill[black!20] (905,389) circle (9);
+  \T[]{857,580}{\F{6.55}{8}\bfseries\color{bbteal2}}{Factory workers}
+  % more
+  \fill[bblilac] (1173,461) circle (83);
+  \node[font=\F{14.4}{15}\bfseries\color{bbpurple}] at (1173,463) {+};
+  \T[]{1173,582}{\F{6.55}{8}\bfseries\color{bbpurple}}{\& more}
+  % quote
+  \fill[black!30, rounded corners=7pt] (307,634) rectangle (1107,721);
+  \fill[bbnavy, rounded corners=7pt] (300,627) rectangle (1100,714);
+  \node[font=\F{11.5}{14}\itshape\color{white}] at (700,672) {\textcolor{bbamber}{\textbf{``}}A small pause is better than a big accident.\textcolor{bbamber}{\textbf{''}}};
+  \footer{9}
+\end{slide}
+\end{frame}
+
+\end{document}
